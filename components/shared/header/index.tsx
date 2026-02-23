@@ -18,7 +18,7 @@ export default function Header() {
               className='flex items-center header-button font-extrabold text-2xl m-1'
             >
               <Image
-                src='/icons/logo.svg'
+                src='/icons/azclogo.svg'
                 alt={`${APP_NAME} logo`}
                 width={40}
                 height={40}
