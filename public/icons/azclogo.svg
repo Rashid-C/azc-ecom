@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <rect width="800" height="800" fill="#080808"/>
+
+  <!--
+    AZC interlocked monogram
+    Carefully traced from original:
+    - A: two diagonal legs (peak at top-center), crossbar at mid-height
+    - Z: top-right horizontal bar, diagonal from top-right to bottom-left, bottom-left horizontal bar
+    - C: right-side open bracket — top bar, right vertical, bottom bar (open on left)
+    The right leg of A doubles as the left edge of Z's top bar
+    The Z diagonal and C share the bottom bar
+    Stroke width ~28px throughout
+    SW = stroke width approximation
+  -->
+
+  <g fill="white" transform="translate(398, 400)">
+
+    <!-- ═══ A ═══ -->
+    <!-- A left leg: from peak (-60,-155) down-left to (-185,155) -->
+    <polygon points="-60,-155  -33,-155  -158,155  -185,155"/>
+    <!-- A right leg: from peak (-60,-155) down-right to (35,155) — shared with Z top area -->
+    <polygon points="-60,-155  -33,-155   62,155   35,155"/>
+    <!-- A crossbar: horizontal bar at y=10 connecting both legs -->
+    <polygon points="-128,0  -128,26  -8,26  -8,0"/>
+
+    <!-- ═══ Z ═══ -->
+    <!-- Z top bar: horizontal from ~left of right-A-leg top to far right (~190) -->
+    <polygon points="-48,-155  185,-155  185,-128  -48,-128"/>
+    <!-- Z diagonal: from top-right to bottom-left -->
+    <polygon points="156,-128  185,-128  -20,128  -48,128"/>
+    <!-- Z bottom bar: horizontal from far-left to ~right -->
+    <polygon points="-48,128  120,128  120,155  -48,155"/>
+
+    <!-- ═══ C ═══ -->
+    <!-- C top bar: from ~x=90 to far right, same y as Z top bar -->
+    <polygon points="90,-155  215,-155  215,-128  90,-128"/>
+    <!-- C right vertical: full height on the right side -->
+    <polygon points="185,-155  215,-155  215,155  185,155"/>
+    <!-- C bottom bar: from ~x=90 to far right, same y as Z bottom bar -->
+    <polygon points="90,128  215,128  215,155  90,155"/>
+
+  </g>
+</svg>
