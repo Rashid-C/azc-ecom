@@ -19,3 +19,19 @@ export const toSlug = (text: string): string =>
     .replace(/[^\w\s-]/g, '') // Remove non-word, non-whitespace, non-hyphen chars
     .replace(/\s+/g, '-') // Replace whitespace with hyphens
     .replace(/^-+|-+$/g, '')
+
+
+const CURREENCY_FORMATTER = new Intl.NumberFormat('en-US', {
+  currency: 'USD',
+  style: 'currency',
+  minimumFractionDigits: 2,
+})
+
+export function formatCurrency(amount: number) {
+  return CURREENCY_FORMATTER.format(amount)
+}
+
+const NUMBER_FORMATTER = new Intl.NumberFormat('en-US')
+export function formatNumber(number: number) {
+  return NUMBER_FORMATTER.format(number)
+}
