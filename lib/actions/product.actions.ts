@@ -94,3 +94,30 @@ export async function getRelatedProductsByCategory({
     totalPages: Math.ceil(productsCount / limit),
   }
 }
+
+// GET PRODUCTS BY SEARCH/FILTERS
+export async function getProductsBySearch({
+  q = 'all',
+  category = 'all',
+  tag = 'all',
+}: {
+  q?: string
+  category?: string
+  tag?: string
+}) {
+  await connectToDatabase()
+  const conditions: Record<string, unknown> = { isPublished: true }
+
+  if (q !== 'all') {
+    conditions.name = { $regex: q, $options: 'i' }
+  }
+  if (category !== 'all') {
+    conditions.category = category
+  }
+  if (tag !== 'all') {
+    conditions.tags = { $in: [tag] }
+  }
+
+  const products = await Product.find(conditions).sort({ createdAt: 'desc' })
+  return JSON.parse(JSON.stringify(products)) as IProduct[]
+}
