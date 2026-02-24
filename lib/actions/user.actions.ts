@@ -17,6 +17,11 @@ export const SignOut = async () => {
 }
 
 
+export const SignInWithGoogle = async () => {
+  await signIn('google')
+}
+
+
 // CREATE
 export async function registerUser(userSignUp: IUserSignUp) {
   try {
