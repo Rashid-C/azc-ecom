@@ -11,7 +11,7 @@ import {
 import { APP_NAME } from '@/lib/constants'
 const categories = ['men', 'women', 'kids', 'accessories', 'bakery']
 
-export default async function Search() {
+export default function Search() {
   return (
     <form action='/search' method='GET' className='flex  items-stretch h-10 '>
       <Select name='category'>

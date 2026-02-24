@@ -20,13 +20,13 @@ export default async function UserButton() {
         <div className='flex gap-2 items-center'>
             <DropdownMenu>
                 <DropdownMenuTrigger className='header-button' asChild>
-                    <div className='flex items-center'>
+                    <button type='button' className='flex items-center'>
                         <div className='flex flex-col text-xs text-left'>
                             <span>Hello, {session ? session.user.name : 'sign in'}</span>
                             <span className='font-bold'>Account & Orders</span>
                         </div>
                         <ChevronDown />
-                    </div>
+                    </button>
                 </DropdownMenuTrigger>
                 {session ? (
                     <DropdownMenuContent className='w-56' align='end' forceMount>
