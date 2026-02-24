@@ -19,6 +19,7 @@ export const toSlug = (text: string): string =>
     .replace(/[^\w\s-]/g, '') // Remove non-word, non-whitespace, non-hyphen chars
     .replace(/\s+/g, '-') // Replace whitespace with hyphens
     .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-')
 
 
 const CURREENCY_FORMATTER = new Intl.NumberFormat('en-US', {
