@@ -31,7 +31,8 @@ const showToast = ({ title, description, variant, action }: ToastInput) => {
 
 export function useToast() {
   return {
-    toast: (input: ToastInput) => showToast(input),
+    toast,
   }
 }
 
+export const toast = (input: ToastInput) => showToast(input)
