@@ -1,6 +1,5 @@
 import { APP_NAME } from '@/lib/constants'
 import Link from 'next/link'
-import React from 'react'
 
 export default function CheckoutFooter() {
     return (
