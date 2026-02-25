@@ -124,45 +124,46 @@ const ProductList = () => {
                     <TableBody>    {data?.products.map((product: IProduct) => {
                         const productId = String(product._id)
                         return (
-                        <TableRow key={productId}>
-                            <TableCell>{formatId(productId)}</TableCell>
-                            <TableCell>
-                                <Link href={`/admin/products/${productId}`}>
-                                    {product.name}
-                                </Link>
-                            </TableCell>
-                            <TableCell className='text-right'>${product.price}</TableCell>
-                            <TableCell>{product.category}</TableCell>
-                            <TableCell>{product.countInStock}</TableCell>
-                            <TableCell>{product.avgRating}</TableCell>
-                            <TableCell>{product.isPublished ? 'Yes' : 'No'}</TableCell>
-                            <TableCell>
-                                {formatDateTime(product.updatedAt).dateTime}
-                            </TableCell>
-                            <TableCell className='flex gap-1'>
-                                <Button asChild variant='outline' size='sm'>
-                                    <Link href={`/admin/products/${productId}`}>Edit</Link>
-                                </Button>
-                                <Button asChild variant='outline' size='sm'>
-                                    <Link target='_blank' href={`/product/${product.slug}`}>
-                                        View
+                            <TableRow key={productId}>
+                                <TableCell>{formatId(productId)}</TableCell>
+                                <TableCell>
+                                    <Link href={`/admin/products/${productId}`}>
+                                        {product.name}
                                     </Link>
-                                </Button>
-                                <DeleteDialog
-                                    id={productId}
-                                    action={deleteProduct}
-                                    callbackAction={() => {
-                                        startTransition(async () => {
-                                            const data = await getAllProductsForAdmin({
-                                                query: inputValue,
+                                </TableCell>
+                                <TableCell className='text-right'>${product.price}</TableCell>
+                                <TableCell>{product.category}</TableCell>
+                                <TableCell>{product.countInStock}</TableCell>
+                                <TableCell>{product.avgRating}</TableCell>
+                                <TableCell>{product.isPublished ? 'Yes' : 'No'}</TableCell>
+                                <TableCell>
+                                    {formatDateTime(product.updatedAt).dateTime}
+                                </TableCell>
+                                <TableCell className='flex gap-1'>
+                                    <Button asChild variant='outline' size='sm'>
+                                        <Link href={`/admin/products/${productId}`}>Edit</Link>
+                                    </Button>
+                                    <Button asChild variant='outline' size='sm'>
+                                        <Link target='_blank' href={`/product/${product.slug}`}>
+                                            View
+                                        </Link>
+                                    </Button>
+                                    <DeleteDialog
+                                        id={productId}
+                                        action={deleteProduct}
+                                        callbackAction={() => {
+                                            startTransition(async () => {
+                                                const data = await getAllProductsForAdmin({
+                                                    query: inputValue,
+                                                })
+                                                setData(data)
                                             })
-                                            setData(data)
-                                        })
-                                    }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                    )})}
+                                        }}
+                                    />
+                                </TableCell>
+                            </TableRow>
+                        )
+                    })}
                     </TableBody>
                 </Table>
                     {(data?.totalPages ?? 0) > 1 && (
