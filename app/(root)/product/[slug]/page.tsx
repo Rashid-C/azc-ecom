@@ -17,6 +17,7 @@ import AddToCart from '@/components/shared/product/add-to-cart'
 import RatingSummary from '@/components/shared/product/rating-summary'
 import ReviewList from './review-list'
 import { auth } from '@/auth'
+import { notFound } from 'next/navigation'
 
 export async function generateMetadata(props: {
     params: Promise<{ slug: string }>
@@ -45,6 +46,14 @@ export default async function ProductDetails(props: {
     const { slug } = params
 
     const product = await getProductBySlug(slug)
+    if (!product) notFound()
+
+    const productImages =
+        product.images && product.images.length > 0
+            ? product.images
+            : ['/images/p11-1.jpg']
+    const selectedSize = size || product.sizes?.[0] || ''
+    const selectedColor = color || product.colors?.[0] || ''
 
     const relatedProducts = await getRelatedProductsByCategory({
         category: product.category,
@@ -58,7 +67,7 @@ export default async function ProductDetails(props: {
             <section>
                 <div className='grid grid-cols-1 md:grid-cols-5  '>
                     <div className='col-span-2'>
-                        <ProductGallery images={product.images} />
+                        <ProductGallery images={productImages} />
                     </div>
 
                     <div className='flex w-full flex-col gap-2 md:p-5 col-span-2'>
@@ -90,8 +99,8 @@ export default async function ProductDetails(props: {
                         <div>
                             <SelectVariant
                                 product={product}
-                                size={size || product.sizes[0]}
-                                color={color || product.colors[0]}
+                                size={selectedSize}
+                                color={selectedColor}
                             />
                         </div>
                         <Separator className='my-2' />
@@ -131,9 +140,9 @@ export default async function ProductDetails(props: {
                                                 category: product.category,
                                                 price: round2(product.price),
                                                 quantity: 1,
-                                                image: product.images[0],
-                                                size: size || product.sizes[0],
-                                                color: color || product.colors[0],
+                                                image: productImages[0],
+                                                size: selectedSize || undefined,
+                                                color: selectedColor || undefined,
                                             }}
                                         />
                                     </div>

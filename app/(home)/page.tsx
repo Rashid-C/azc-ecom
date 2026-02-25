@@ -1,18 +1,17 @@
 import { HomeCarousel } from "@/components/shared/home/home-carousel";
 import data from "@/lib/data";
 import {
-  getAllCategories,
+  getHomeCategoriesForCard,
   getProductsByTag,
   getProductsForCard,
 } from "@/lib/actions/product.actions";
-import { toSlug } from "@/lib/utils";
 import { HomeCard } from "@/components/shared/home/home-card";
 import { Card, CardContent } from "@/components/ui/card";
 import ProductSlider from "@/components/shared/product/product-slider";
 import BrowsingHistoryList from "@/components/shared/browsing-history-list";
 
 export default async function Page() {
-  const categories = (await getAllCategories()).slice(0, 4);
+  const categories = await getHomeCategoriesForCard({ limit: 4 });
   const newArrivals = await getProductsForCard({
     tag: "new-arrival",
     limit: 4,
@@ -33,11 +32,7 @@ export default async function Page() {
         text: "See More",
         href: "/search",
       },
-      items: categories.map((category) => ({
-        name: category,
-        image: `/images/${toSlug(category)}.jpg`,
-        href: `/search?category=${encodeURIComponent(category)}`,
-      })),
+      items: categories,
     },
     {
       title: "Explore New Arrivals",

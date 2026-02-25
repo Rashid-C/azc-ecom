@@ -3,13 +3,12 @@ import CartButton from './cart-button'
 import UserButton from './user-button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
-export default function Menu({ forAdmin = false }: { forAdmin?: boolean }) {
+export default function Menu() {
   return (
     <div className='flex justify-end'>
       <nav className='flex gap-3 w-full'>
         <UserButton />
         <CartButton />
-        {forAdmin ? null : <CartButton />}
 
       </nav>
 
