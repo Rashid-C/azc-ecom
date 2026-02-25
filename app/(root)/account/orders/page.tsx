@@ -101,7 +101,7 @@ export default async function OrdersPage(props: {
         </Table>
         {orders.totalPages > 1 && (
           // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-          <Pagination page={page} totalPages={orders?.totalPages!} />
+          <Pagination page={page} totalPages={orders.totalPages} />
         )}
       </div>
       <BrowsingHistoryList className='mt-16' />
