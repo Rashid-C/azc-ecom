@@ -66,6 +66,11 @@ export const ProductInputSchema = z.object({
 })
 
 
+export const ProductUpdateSchema = ProductInputSchema.extend({
+  _id: z.string(),
+})
+
+
 // Order Item
 export const OrderItemSchema = z.object({
   clientId: z.string().min(1, 'clientId is required'),

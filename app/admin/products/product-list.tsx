@@ -103,69 +103,69 @@ const ProductList = () => {
                         </div>
                     </div>
 
-                    <Button asChild variant='default'>
-                        <Link href='/admin/products/create'>Create Product</Link>
-                    </Button>
+                    <Button asChild variant='default'><Link href='/admin/products/create'>Create Product</Link></Button>
                 </div>
-                <div>    <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Id</TableHead>
-                            <TableHead>Name</TableHead>
-                            <TableHead className='text-right'>Price</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead>Stock</TableHead>
-                            <TableHead>Rating</TableHead>
-                            <TableHead>Published</TableHead>
-                            <TableHead>Last Update</TableHead>
-                            <TableHead className='w-[100px]'>Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>    {data?.products.map((product: IProduct) => {
-                        const productId = String(product._id)
-                        return (
-                            <TableRow key={productId}>
-                                <TableCell>{formatId(productId)}</TableCell>
-                                <TableCell>
-                                    <Link href={`/admin/products/${productId}`}>
-                                        {product.name}
-                                    </Link>
-                                </TableCell>
-                                <TableCell className='text-right'>${product.price}</TableCell>
-                                <TableCell>{product.category}</TableCell>
-                                <TableCell>{product.countInStock}</TableCell>
-                                <TableCell>{product.avgRating}</TableCell>
-                                <TableCell>{product.isPublished ? 'Yes' : 'No'}</TableCell>
-                                <TableCell>
-                                    {formatDateTime(product.updatedAt).dateTime}
-                                </TableCell>
-                                <TableCell className='flex gap-1'>
-                                    <Button asChild variant='outline' size='sm'>
-                                        <Link href={`/admin/products/${productId}`}>Edit</Link>
-                                    </Button>
-                                    <Button asChild variant='outline' size='sm'>
-                                        <Link target='_blank' href={`/product/${product.slug}`}>
-                                            View
-                                        </Link>
-                                    </Button>
-                                    <DeleteDialog
-                                        id={productId}
-                                        action={deleteProduct}
-                                        callbackAction={() => {
-                                            startTransition(async () => {
-                                                const data = await getAllProductsForAdmin({
-                                                    query: inputValue,
-                                                })
-                                                setData(data)
-                                            })
-                                        }}
-                                    />
-                                </TableCell>
+                <div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Id</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead className='text-right'>Price</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Stock</TableHead>
+                                <TableHead>Rating</TableHead>
+                                <TableHead>Published</TableHead>
+                                <TableHead>Last Update</TableHead>
+                                <TableHead className='w-[100px]'>Actions</TableHead>
                             </TableRow>
-                        )
-                    })}
-                    </TableBody>
-                </Table>
+                        </TableHeader>
+                        <TableBody>
+                            {data?.products.map((product: IProduct) => {
+                                const productId = String(product._id)
+                                return (
+                                    <TableRow key={productId}>
+                                        <TableCell>{formatId(productId)}</TableCell>
+                                        <TableCell>
+                                            <Link href={`/admin/products/${productId}`}>
+                                                {product.name}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell className='text-right'>${product.price}</TableCell>
+                                        <TableCell>{product.category}</TableCell>
+                                        <TableCell>{product.countInStock}</TableCell>
+                                        <TableCell>{product.avgRating}</TableCell>
+                                        <TableCell>{product.isPublished ? 'Yes' : 'No'}</TableCell>
+                                        <TableCell>
+                                            {formatDateTime(product.updatedAt).dateTime}
+                                        </TableCell>
+                                        <TableCell className='flex gap-1'>
+                                            <Button asChild variant='outline' size='sm'>
+                                                <Link href={`/admin/products/${productId}`}>Edit</Link>
+                                            </Button>
+                                            <Button asChild variant='outline' size='sm'>
+                                                <Link target='_blank' href={`/product/${product.slug}`}>
+                                                    View
+                                                </Link>
+                                            </Button>
+                                            <DeleteDialog
+                                                id={productId}
+                                                action={deleteProduct}
+                                                callbackAction={() => {
+                                                    startTransition(async () => {
+                                                        const data = await getAllProductsForAdmin({
+                                                            query: inputValue,
+                                                        })
+                                                        setData(data)
+                                                    })
+                                                }}
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            })}
+                        </TableBody>
+                    </Table>
                     {(data?.totalPages ?? 0) > 1 && (
                         <div className='flex items-center gap-2'>
                             <Button
