@@ -123,6 +123,9 @@ const ProductList = () => {
                         <TableBody>
                             {data?.products.map((product: IProduct) => {
                                 const productId = String(product._id)
+                                const viewHref = product.isPublished
+                                    ? `/product/${encodeURIComponent(product.slug)}`
+                                    : `/admin/products/${productId}`
                                 return (
                                     <TableRow key={productId}>
                                         <TableCell>{formatId(productId)}</TableCell>
@@ -144,7 +147,10 @@ const ProductList = () => {
                                                 <Link href={`/admin/products/${productId}`}>Edit</Link>
                                             </Button>
                                             <Button asChild variant='outline' size='sm'>
-                                                <Link target='_blank' href={`/product/${product.slug}`}>
+                                                <Link
+                                                    target={product.isPublished ? '_blank' : undefined}
+                                                    href={viewHref}
+                                                >
                                                     View
                                                 </Link>
                                             </Button>

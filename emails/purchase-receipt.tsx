@@ -6,6 +6,7 @@ import {
     Heading,
     Html,
     Img,
+    Link,
     Preview,
     Row,
     Section,
@@ -86,6 +87,8 @@ PurchaseReceiptEmail.PreviewProps = {
 } satisfies OrderInformationProps
 
 const dateFormatter = new Intl.DateTimeFormat('en', { dateStyle: 'medium' })
+const EMPTY_IMAGE_DATA_URL =
+    'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='
 
 const getMimeType = (filePath: string) => {
     const extension = path.extname(filePath).toLowerCase()
@@ -97,7 +100,8 @@ const getMimeType = (filePath: string) => {
     return 'application/octet-stream'
 }
 
-const resolveEmailImageSrc = async (image: string) => {
+const resolveEmailImageSrc = async (image?: string) => {
+    if (!image) return EMPTY_IMAGE_DATA_URL
     if (/^https?:\/\//i.test(image)) return image
 
     const normalizedImagePath = image.startsWith('/') ? image : `/${image}`
@@ -164,17 +168,21 @@ export default async function PurchaseReceiptEmail({
                             {itemsWithImageSrc.map((item) => (
                                 <Row key={item.product} className='mt-8'>
                                     <Column className='w-20'>
-                                        <Img
-                                            width='80'
-                                            alt={item.name}
-                                            className='rounded'
-                                            src={item.emailImageSrc}
-                                        />
+                                        <Link href={`${SERVER_URL}/product/${item.slug}`}>
+                                            <Img
+                                                width='80'
+                                                alt={item.name}
+                                                className='rounded'
+                                                src={item.emailImageSrc}
+                                            />
+                                        </Link>
                                     </Column>
                                     <Column className='align-top'>
-                                        <Text className='mx-2 my-0'>
-                                            {item.name} x {item.quantity}
-                                        </Text>
+                                        <Link href={`${SERVER_URL}/product/${item.slug}`}>
+                                            <Text className='mx-2 my-0'>
+                                                {item.name} x {item.quantity}
+                                            </Text>
+                                        </Link>
                                     </Column>
                                     <Column align='right' className='align-top'>
                                         <Text className='m-0 '>{formatCurrency(item.price)}</Text>

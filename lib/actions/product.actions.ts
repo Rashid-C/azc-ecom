@@ -66,7 +66,20 @@ export async function getProductsByTag({
 // GET ONE PRODUCT BY SLUG
 export async function getProductBySlug(slug: string) {
   await connectToDatabase()
-  const product = await Product.findOne({ slug, isPublished: true })
+  const decodedSlug = decodeURIComponent(slug).trim()
+  const encodedSlug = encodeURIComponent(decodedSlug)
+  const slugCandidates = Array.from(new Set([slug, decodedSlug, encodedSlug]))
+  const escapeRegex = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+  const product = await Product.findOne({
+    isPublished: true,
+    slug: {
+      $in: slugCandidates.map(
+        (value) => new RegExp(`^${escapeRegex(value)}$`, 'i')
+      ),
+    },
+  })
   if (!product) return null
   return JSON.parse(JSON.stringify(product)) as IProduct
 }
