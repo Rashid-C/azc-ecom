@@ -31,6 +31,9 @@ export const AVAILABLE_PAYMENT_METHODS = [
     isDefault: false,
   },
 ]
+
+export const USER_ROLES = ['Admin', 'User']
+
 export const DEFAULT_PAYMENT_METHOD =
   process.env.DEFAULT_PAYMENT_METHOD || 'PayPal'
 
