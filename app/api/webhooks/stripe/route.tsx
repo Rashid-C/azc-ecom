@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
 import { sendPurchaseReceipt } from '@/emails'
+import { connectToDatabase } from '@/lib/db'
 import Order from '@/lib/db/models/order.model'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 
 export async function POST(req: NextRequest) {
+    await connectToDatabase()
     const event = await stripe.webhooks.constructEvent(
         await req.text(),
         req.headers.get('stripe-signature') as string,
@@ -21,6 +23,11 @@ export async function POST(req: NextRequest) {
         const order = await Order.findById(orderId).populate('user', 'email')
         if (order == null) {
             return new NextResponse('Bad Request', { status: 400 })
+        }
+        if (order.isPaid) {
+            return NextResponse.json({
+                message: 'Order was already marked as paid',
+            })
         }
 
         order.isPaid = true

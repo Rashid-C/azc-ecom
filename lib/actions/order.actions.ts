@@ -193,6 +193,49 @@ export async function approvePayPalOrder(
   }
 }
 
+export async function updateStripeOrderToPaid({
+  orderId,
+  paymentIntentId,
+  email,
+  pricePaid,
+}: {
+  orderId: string
+  paymentIntentId: string
+  email?: string | null
+  pricePaid: string
+}) {
+  await connectToDatabase()
+  try {
+    const order = await Order.findById(orderId).populate('user', 'email')
+    if (!order) throw new Error('Order not found')
+
+    if (order.isPaid) {
+      return { success: true, message: 'Order already marked as paid' }
+    }
+
+    order.isPaid = true
+    order.paidAt = new Date()
+    order.paymentResult = {
+      id: paymentIntentId,
+      status: 'COMPLETED',
+      email_address: email || '',
+      pricePaid,
+    }
+
+    await order.save()
+    await sendPurchaseReceipt({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+    revalidatePath(`/checkout/${orderId}`)
+
+    return {
+      success: true,
+      message: 'Your order has been successfully paid by Stripe',
+    }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
 
 export const calcDeliveryDateAndPrice = async ({
     items,
@@ -245,4 +288,3 @@ export const calcDeliveryDateAndPrice = async ({
         totalPrice,
     }
 }
-

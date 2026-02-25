@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import Stripe from 'stripe'
 
 import { Button } from '@/components/ui/button'
-import { getOrderById } from '@/lib/actions/order.actions'
+import { getOrderById, updateStripeOrderToPaid } from '@/lib/actions/order.actions'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 
@@ -32,6 +32,16 @@ export default async function SuccessPage(props: {
 
     const isSuccess = paymentIntent.status === 'succeeded'
     if (!isSuccess) return redirect(`/checkout/${id}`)
+
+    await updateStripeOrderToPaid({
+        orderId: order._id.toString(),
+        paymentIntentId: paymentIntent.id,
+        email: paymentIntent.receipt_email,
+        pricePaid: ((paymentIntent.amount_received || paymentIntent.amount) / 100).toFixed(
+            2
+        ),
+    })
+
     return (
         <div className='max-w-4xl w-full mx-auto space-y-8'>
             <div className='flex flex-col gap-6 items-center '>
