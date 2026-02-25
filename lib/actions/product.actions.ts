@@ -67,8 +67,36 @@ export async function getProductsByTag({
 export async function getProductBySlug(slug: string) {
   await connectToDatabase()
   const product = await Product.findOne({ slug, isPublished: true })
-  if (!product) throw new Error('Product not found')
+  if (!product) return null
   return JSON.parse(JSON.stringify(product)) as IProduct
+}
+
+export async function getHomeCategoriesForCard({ limit = 4 }: { limit?: number }) {
+  await connectToDatabase()
+  const categories = await Product.aggregate([
+    { $match: { isPublished: true } },
+    { $sort: { createdAt: -1 } },
+    {
+      $group: {
+        _id: '$category',
+        image: { $first: { $arrayElemAt: ['$images', 0] } },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        name: '$_id',
+        image: { $ifNull: ['$image', '/images/p11-1.jpg'] },
+      },
+    },
+    { $limit: limit },
+  ])
+
+  return categories.map((category: { name: string; image: string }) => ({
+    name: category.name,
+    image: category.image || '/images/p11-1.jpg',
+    href: `/search?category=${encodeURIComponent(category.name)}`,
+  }))
 }
 // GET RELATED PRODUCTS: PRODUCTS WITH SAME CATEGORY
 export async function getRelatedProductsByCategory({
