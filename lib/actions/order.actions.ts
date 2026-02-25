@@ -182,7 +182,11 @@ export async function approvePayPalOrder(
         captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
     }
     await order.save()
-    await sendPurchaseReceipt({ order })
+    try {
+      await sendPurchaseReceipt({ order })
+    } catch (emailError) {
+      console.error('Failed to send purchase receipt:', formatError(emailError))
+    }
     revalidatePath(`/account/orders/${orderId}`)
     return {
       success: true,
@@ -223,7 +227,11 @@ export async function updateStripeOrderToPaid({
     }
 
     await order.save()
-    await sendPurchaseReceipt({ order })
+    try {
+      await sendPurchaseReceipt({ order })
+    } catch (emailError) {
+      console.error('Failed to send purchase receipt:', formatError(emailError))
+    }
     revalidatePath(`/account/orders/${orderId}`)
     revalidatePath(`/checkout/${orderId}`)
 
