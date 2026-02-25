@@ -130,6 +130,10 @@
 
 @layer utilities {
 
+  .web-page-content p {
+    @apply py-2;
+  }
+
   .highlight-link a,
   a.highlight-link {
     @apply text-sky-700 hover:text-orange-700 hover:underline
@@ -139,6 +143,7 @@
     @apply cursor-pointer p-1 border border-transparent hover:border-white rounded-[2px];
 
   }
+
   .item-button {
     @apply p-3 hover:bg-muted hover:no-underline;
   }
@@ -150,9 +155,9 @@
   .h2-bold {
     @apply font-bold text-lg lg:text-xl
   }
-  .flex-between{
+
+  .flex-between {
     @apply flex justify-between items-center
-  
   }
 
 }
