@@ -135,37 +135,4 @@ export async function getAllUsers({
   }
 }
 
-export async function getUserById(userId: string) {
-  await connectToDatabase()
-  const user = await User.findById(userId)
-  return JSON.parse(JSON.stringify(user)) as IUser
-}
 
-export async function updateUser({
-  _id,
-  name,
-  email,
-  role,
-}: {
-  _id: string
-  name: string
-  email: string
-  role: string
-}) {
-  try {
-    await connectToDatabase()
-    const user = await User.findById(_id)
-    if (!user) throw new Error('User not found')
-
-    user.name = name
-    user.email = email
-    user.role = role
-
-    await user.save()
-    revalidatePath('/admin/users')
-    revalidatePath(`/admin/users/${_id}`)
-    return { success: true, message: 'User updated successfully' }
-  } catch (error) {
-    return { success: false, message: formatError(error) }
-  }
-}
