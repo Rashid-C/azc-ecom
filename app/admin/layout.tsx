@@ -25,7 +25,7 @@ export default async function AdminLayout({
             </Link>
             <AdminNav className='mx-6 hidden md:flex' />
             <div className='ml-auto flex items-center space-x-4'>
-              <Menu forAdmin />
+              <Menu />
             </div>
           </div>
           <div>
