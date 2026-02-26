@@ -2,16 +2,17 @@ import { EllipsisVertical } from 'lucide-react'
 import CartButton from './cart-button'
 import UserButton from './user-button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import ThemeSwitcher from './theme-switcher'
 
 export default function Menu() {
   return (
     <div className='flex justify-end'>
-      <nav className='flex gap-3 w-full'>
+      <nav className='hidden md:flex gap-3  w-full'>
+        <ThemeSwitcher />
         <UserButton />
         <CartButton />
 
       </nav>
-
       <nav className='md:hidden'>
         <Sheet>
           <SheetTrigger className='align-middle header-button'>
@@ -24,7 +25,7 @@ export default function Menu() {
                 <SheetDescription></SheetDescription>
               </div>
             </SheetHeader>
-
+            <ThemeSwitcher />
             <UserButton />
             <CartButton />
           </SheetContent>
