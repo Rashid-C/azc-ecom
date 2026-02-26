@@ -6,9 +6,7 @@ import { useForm } from 'react-hook-form'
 
 import { z } from 'zod'
 
-import MdEditor from 'react-markdown-editor-lite'
 import ReactMarkdown from 'react-markdown'
-import 'react-markdown-editor-lite/lib/index.css'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -25,6 +23,7 @@ import { IWebPage } from '@/lib/db/models/web-page.model'
 import { WebPageInputSchema } from '@/lib/validator'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toSlug } from '@/lib/utils'
+import { Textarea } from '@/components/ui/textarea'
 
 const webPageDefaultValues =
   process.env.NODE_ENV === 'development'
@@ -163,12 +162,16 @@ const WebPageForm = ({
               <FormItem className='w-full'>
                 <FormLabel>Content</FormLabel>
                 <FormControl>
-                  <MdEditor
-                    {...field}
-                    style={{ height: '500px' }}
-                    renderHTML={(text) => <ReactMarkdown>{text}</ReactMarkdown>}
-                    onChange={({ text }) => form.setValue('content', text)}
-                  />
+                  <div className='grid gap-4 md:grid-cols-2'>
+                    <Textarea
+                      {...field}
+                      rows={20}
+                      placeholder='Write markdown content'
+                    />
+                    <div className='rounded-md border p-4 min-h-[500px] overflow-auto'>
+                      <ReactMarkdown>{field.value || ''}</ReactMarkdown>
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
