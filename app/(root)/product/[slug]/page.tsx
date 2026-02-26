@@ -49,8 +49,8 @@ export default async function ProductDetails(props: {
     if (!product) notFound()
 
     const productImages =
-        product.images && product.images.length > 0
-            ? product.images
+        product.images && product.images.filter(Boolean).length > 0
+            ? product.images.filter(Boolean)
             : ['/images/p11-1.jpg']
     const selectedSize = size || product.sizes?.[0] || ''
     const selectedColor = color || product.colors?.[0] || ''

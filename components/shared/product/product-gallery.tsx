@@ -7,7 +7,7 @@ import 'react-medium-image-zoom/dist/styles.css'
 export default function ProductGallery({ images }: { images: string[] }) {
     const [selectedImage, setSelectedImage] = useState(0)
     const galleryImages =
-        images && images.length > 0 ? images : ['/images/p11-1.jpg']
+        images && images.filter(Boolean).length > 0 ? images.filter(Boolean) : ['/images/p11-1.jpg']
     return (
         <div className='flex gap-2'>
             <div className='flex flex-col gap-2 mt-8'>
@@ -31,7 +31,7 @@ export default function ProductGallery({ images }: { images: string[] }) {
             </div>
 
             <div className='w-full'>
-                <Zoom>
+                <Zoom zoomImg={{ src: galleryImages[selectedImage], alt: 'product image' }}>
                     <div className='relative h-[500px]'>
                         <Image
                             src={galleryImages[selectedImage]}
