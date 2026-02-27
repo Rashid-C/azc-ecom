@@ -1,14 +1,124 @@
 'use server'
 
 import { connectToDatabase } from '@/lib/db'
-import Product, { IProduct } from '../db/models/product.model'
-import { PAGE_SIZE } from '../constants'
+import Product, { IProduct } from '@/lib/db/models/product.model'
 import { revalidatePath } from 'next/cache'
 import { formatError } from '../utils'
-import { IProductInput } from '@/types'
 import { ProductInputSchema, ProductUpdateSchema } from '../validator'
-import z from 'zod'
-// import Product , { IProduct } from '@/lib/db/models/product.model'
+import { IProductInput } from '@/types'
+import { z } from 'zod'
+import { getSetting } from './setting.actions'
+
+// CREATE
+export async function createProduct(data: IProductInput) {
+  try {
+    const product = ProductInputSchema.parse(data)
+    await connectToDatabase()
+    await Product.create(product)
+    revalidatePath('/admin/products')
+    return {
+      success: true,
+      message: 'Product created successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+// UPDATE
+export async function updateProduct(data: z.infer<typeof ProductUpdateSchema>) {
+  try {
+    const product = ProductUpdateSchema.parse(data)
+    await connectToDatabase()
+    await Product.findByIdAndUpdate(product._id, product)
+    revalidatePath('/admin/products')
+    return {
+      success: true,
+      message: 'Product updated successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+// DELETE
+export async function deleteProduct(id: string) {
+  try {
+    await connectToDatabase()
+    const res = await Product.findByIdAndDelete(id)
+    if (!res) throw new Error('Product not found')
+    revalidatePath('/admin/products')
+    return {
+      success: true,
+      message: 'Product deleted successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+// GET ONE PRODUCT BY ID
+export async function getProductById(productId: string) {
+  await connectToDatabase()
+  const product = await Product.findById(productId)
+  return JSON.parse(JSON.stringify(product)) as IProduct
+}
+
+// GET ALL PRODUCTS FOR ADMIN
+export async function getAllProductsForAdmin({
+  query,
+  page = 1,
+  sort = 'latest',
+  limit,
+}: {
+  query: string
+  page?: number
+  sort?: string
+  limit?: number
+}) {
+  await connectToDatabase()
+
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
+  const queryFilter =
+    query && query !== 'all'
+      ? {
+          name: {
+            $regex: query,
+            $options: 'i',
+          },
+        }
+      : {}
+
+  const order: Record<string, 1 | -1> =
+    sort === 'best-selling'
+      ? { numSales: -1 }
+      : sort === 'price-low-to-high'
+        ? { price: 1 }
+        : sort === 'price-high-to-low'
+          ? { price: -1 }
+          : sort === 'avg-customer-review'
+            ? { avgRating: -1 }
+            : { _id: -1 }
+  const products = await Product.find({
+    ...queryFilter,
+  })
+    .sort(order)
+    .skip(limit * (Number(page) - 1))
+    .limit(limit)
+    .lean()
+
+  const countProducts = await Product.countDocuments({
+    ...queryFilter,
+  })
+  return {
+    products: JSON.parse(JSON.stringify(products)) as IProduct[],
+    totalPages: Math.ceil(countProducts / pageSize),
+    totalProducts: countProducts,
+    from: pageSize * (Number(page) - 1) + 1,
+    to: pageSize * (Number(page) - 1) + products.length,
+  }
+}
 
 export async function getAllCategories() {
   await connectToDatabase()
@@ -17,7 +127,6 @@ export async function getAllCategories() {
   )
   return categories
 }
-
 export async function getProductsForCard({
   tag,
   limit = 4,
@@ -42,9 +151,7 @@ export async function getProductsForCard({
     image: string
   }[]
 }
-
-
-//GET PRODUCTS BY TAG
+// GET PRODUCTS BY TAG
 export async function getProductsByTag({
   tag,
   limit = 10,
@@ -62,60 +169,18 @@ export async function getProductsByTag({
   return JSON.parse(JSON.stringify(products)) as IProduct[]
 }
 
-
 // GET ONE PRODUCT BY SLUG
 export async function getProductBySlug(slug: string) {
   await connectToDatabase()
-  const decodedSlug = decodeURIComponent(slug).trim()
-  const encodedSlug = encodeURIComponent(decodedSlug)
-  const slugCandidates = Array.from(new Set([slug, decodedSlug, encodedSlug]))
-  const escapeRegex = (value: string) =>
-    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
-  const product = await Product.findOne({
-    isPublished: true,
-    slug: {
-      $in: slugCandidates.map(
-        (value) => new RegExp(`^${escapeRegex(value)}$`, 'i')
-      ),
-    },
-  })
-  if (!product) return null
+  const product = await Product.findOne({ slug, isPublished: true })
+  if (!product) throw new Error('Product not found')
   return JSON.parse(JSON.stringify(product)) as IProduct
-}
-
-export async function getHomeCategoriesForCard({ limit = 4 }: { limit?: number }) {
-  await connectToDatabase()
-  const categories = await Product.aggregate([
-    { $match: { isPublished: true } },
-    { $sort: { createdAt: -1 } },
-    {
-      $group: {
-        _id: '$category',
-        image: { $first: { $arrayElemAt: ['$images', 0] } },
-      },
-    },
-    {
-      $project: {
-        _id: 0,
-        name: '$_id',
-        image: { $ifNull: ['$image', '/images/p11-1.jpg'] },
-      },
-    },
-    { $limit: limit },
-  ])
-
-  return categories.map((category: { name: string; image: string }) => ({
-    name: category.name,
-    image: category.image || '/images/p11-1.jpg',
-    href: `/search?category=${encodeURIComponent(category.name)}`,
-  }))
 }
 // GET RELATED PRODUCTS: PRODUCTS WITH SAME CATEGORY
 export async function getRelatedProductsByCategory({
   category,
   productId,
-  limit = PAGE_SIZE,
+  limit = 4,
   page = 1,
 }: {
   category: string
@@ -123,6 +188,10 @@ export async function getRelatedProductsByCategory({
   limit?: number
   page: number
 }) {
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
   await connectToDatabase()
   const skipAmount = (Number(page) - 1) * limit
   const conditions = {
@@ -139,33 +208,6 @@ export async function getRelatedProductsByCategory({
     data: JSON.parse(JSON.stringify(products)) as IProduct[],
     totalPages: Math.ceil(productsCount / limit),
   }
-}
-
-// GET PRODUCTS BY SEARCH/FILTERS
-export async function getProductsBySearch({
-  q = 'all',
-  category = 'all',
-  tag = 'all',
-}: {
-  q?: string
-  category?: string
-  tag?: string
-}) {
-  await connectToDatabase()
-  const conditions: Record<string, unknown> = { isPublished: true }
-
-  if (q !== 'all') {
-    conditions.name = { $regex: q, $options: 'i' }
-  }
-  if (category !== 'all') {
-    conditions.category = category
-  }
-  if (tag !== 'all') {
-    conditions.tags = { $in: [tag] }
-  }
-
-  const products = await Product.find(conditions).sort({ createdAt: 'desc' })
-  return JSON.parse(JSON.stringify(products)) as IProduct[]
 }
 
 // GET ALL PRODUCTS
@@ -188,17 +230,20 @@ export async function getAllProducts({
   rating?: string
   sort?: string
 }) {
-  limit = limit || PAGE_SIZE
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
   await connectToDatabase()
 
   const queryFilter =
     query && query !== 'all'
       ? {
-        name: {
-          $regex: query,
-          $options: 'i',
-        },
-      }
+          name: {
+            $regex: query,
+            $options: 'i',
+          },
+        }
       : {}
   const categoryFilter = category && category !== 'all' ? { category } : {}
   const tagFilter = tag && tag !== 'all' ? { tags: tag } : {}
@@ -206,20 +251,20 @@ export async function getAllProducts({
   const ratingFilter =
     rating && rating !== 'all'
       ? {
-        avgRating: {
-          $gte: Number(rating),
-        },
-      }
+          avgRating: {
+            $gte: Number(rating),
+          },
+        }
       : {}
   // 10-50
   const priceFilter =
     price && price !== 'all'
       ? {
-        price: {
-          $gte: Number(price.split('-')[0]),
-          $lte: Number(price.split('-')[1]), // 10-50
-        },
-      }
+          price: {
+            $gte: Number(price.split('-')[0]),
+            $lte: Number(price.split('-')[1]),
+          },
+        }
       : {}
   const order: Record<string, 1 | -1> =
     sort === 'best-selling'
@@ -277,114 +322,4 @@ export async function getAllTags() {
           .join(' ')
       ) as string[]) || []
   )
-}
-
-
-// DELETE
-export async function deleteProduct(id: string) {
-  try {
-    await connectToDatabase()
-    const res = await Product.findByIdAndDelete(id)
-    if (!res) throw new Error('Product not found')
-    revalidatePath('/admin/products')
-    return {
-      success: true,
-      message: 'Product deleted successfully',
-    }
-  } catch (error) {
-    return { success: false, message: formatError(error) }
-  }
-}
-
-
-// GET ALL PRODUCTS FOR ADMIN
-export async function getAllProductsForAdmin({
-  query,
-  page = 1,
-  sort = 'latest',
-  limit,
-}: {
-  query: string
-  page?: number
-  sort?: string
-  limit?: number
-}) {
-  await connectToDatabase()
-
-  const pageSize = limit || PAGE_SIZE
-  const queryFilter =
-    query && query !== 'all'
-      ? {
-        name: {
-          $regex: query,
-          $options: 'i',
-        },
-      }
-      : {}
-  const order: Record<string, 1 | -1> =
-    sort === 'best-selling'
-      ? { numSales: -1 }
-      : sort === 'price-low-to-high'
-        ? { price: 1 }
-        : sort === 'price-high-to-low'
-          ? { price: -1 }
-          : sort === 'avg-customer-review'
-            ? { avgRating: -1 }
-            : { _id: -1 }
-  const products = await Product.find({
-    ...queryFilter,
-  })
-    .sort(order)
-    .skip(pageSize * (Number(page) - 1))
-    .limit(pageSize)
-    .lean()
-  const countProducts = await Product.countDocuments({
-    ...queryFilter,
-  })
-  return {
-    products: JSON.parse(JSON.stringify(products)) as IProduct[],
-    totalPages: Math.ceil(countProducts / pageSize),
-    totalProducts: countProducts,
-    from: pageSize * (Number(page) - 1) + 1,
-    to: pageSize * (Number(page) - 1) + products.length,
-  }
-}
-
-
-// CREATE
-export async function createProduct(data: IProductInput) {
-  try {
-    const product = ProductInputSchema.parse(data)
-    await connectToDatabase()
-    await Product.create(product)
-    revalidatePath('/admin/products')
-    return {
-      success: true,
-      message: 'Product created successfully',
-    }
-  } catch (error) {
-    return { success: false, message: formatError(error) }
-  }
-}
-
-// UPDATE
-export async function updateProduct(data: z.infer<typeof ProductUpdateSchema>) {
-  try {
-    const product = ProductUpdateSchema.parse(data)
-    await connectToDatabase()
-    await Product.findByIdAndUpdate(product._id, product)
-    revalidatePath('/admin/products')
-    return {
-      success: true,
-      message: 'Product updated successfully',
-    }
-  } catch (error) {
-    return { success: false, message: formatError(error) }
-  }
-}
-// GET ONE PRODUCT BY ID
-export async function getProductById(productId: string) {
-  await connectToDatabase()
-  const product = await Product.findById(productId)
-  return JSON.parse(JSON.stringify(product)) as IProduct
 }

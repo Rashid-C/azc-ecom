@@ -1,4 +1,3 @@
-import { APP_NAME } from '@/lib/constants'
 import Image from 'next/image'
 import Link from 'next/link'
 import Search from './search'
@@ -6,9 +5,13 @@ import Menu from './menu'
 import data from '@/lib/data'
 import { getAllCategories } from '@/lib/actions/product.actions'
 import Sidebar from './sidebar'
+import { getSetting } from '@/lib/actions/setting.actions'
+import { getTranslations } from 'next-intl/server'
 
 export default async function Header() {
   const categories = await getAllCategories()
+    const { site } = await getSetting()
+  const t = await getTranslations()
   return (
     <header className='bg-black text-white'>
       <div className='px-2'>
@@ -19,12 +22,12 @@ export default async function Header() {
               className='flex items-center header-button font-extrabold text-2xl m-1'
             >
               <Image
-                src='/icons/azclogo.svg'
-                alt={`${APP_NAME} logo`}
+                  src={site.logo}
+                 alt={`${site.name} logo`}
                 width={40}
                 height={40}
               />
-              {APP_NAME}
+              {site.name}
             </Link>
           </div>
           <div className='hidden md:block flex-1 max-w-xl'>
@@ -46,7 +49,7 @@ export default async function Header() {
               key={menu.name}
               className='header-button !p-2'
             >
-              {menu.name}
+                {t('Header.' + menu.name)}
             </Link>
           ))}
         </div>
