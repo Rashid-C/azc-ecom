@@ -75,14 +75,19 @@ const ProductForm = ({
   product,
   productId,
   categories = [],
+  brands = [],
 }: {
   type: 'Create' | 'Update'
   product?: IProduct
   productId?: string
   categories?: string[]
+  brands?: string[]
 }) => {
   const router = useRouter()
   const [catOpen, setCatOpen] = useState(false)
+  const [brandOpen, setBrandOpen] = useState(false)
+  const [catOrder, setCatOrder] = useState<string[]>(categories)
+  const [brandOrder, setBrandOrder] = useState<string[]>(brands)
 
   const form = useForm<IProductInput>({
     resolver: (
@@ -187,12 +192,12 @@ const ProductForm = ({
             control={form.control}
             name='category'
             render={({ field }) => {
-              const filtered = categories.filter((c) =>
+              const filtered = catOrder.filter((c) =>
                 c.toLowerCase().includes((field.value ?? '').toLowerCase())
               )
               const isNew =
                 field.value.trim() !== '' &&
-                !categories.some(
+                !catOrder.some(
                   (c) => c.toLowerCase() === field.value.toLowerCase()
                 )
               return (
@@ -222,6 +227,7 @@ const ProductForm = ({
                               onMouseDown={() => {
                                 field.onChange(cat)
                                 setCatOpen(false)
+                                setCatOrder((prev) => [cat, ...prev.filter((c) => c !== cat)])
                               }}
                               className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
                                 field.value === cat
@@ -255,16 +261,71 @@ const ProductForm = ({
           <FormField
             control={form.control}
             name='brand'
-            render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Brand</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter product brand' {...field} />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const filtered = brandOrder.filter((b) =>
+                b.toLowerCase().includes((field.value ?? '').toLowerCase())
+              )
+              const isNew =
+                field.value.trim() !== '' &&
+                !brandOrder.some(
+                  (b) => b.toLowerCase() === field.value.toLowerCase()
+                )
+              return (
+                <FormItem className='w-full'>
+                  <FormLabel>Brand</FormLabel>
+                  <FormControl>
+                    <div className='relative'>
+                      <Input
+                        placeholder='Select or create brand'
+                        {...field}
+                        autoComplete='off'
+                        onChange={(e) => {
+                          field.onChange(e.target.value)
+                          setBrandOpen(true)
+                        }}
+                        onFocus={() => setBrandOpen(true)}
+                        onBlur={() =>
+                          setTimeout(() => setBrandOpen(false), 150)
+                        }
+                      />
+                      {brandOpen && (filtered.length > 0 || isNew) && (
+                        <div className='absolute z-20 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-auto'>
+                          {filtered.map((b) => (
+                            <button
+                              key={b}
+                              type='button'
+                              onMouseDown={() => {
+                                field.onChange(b)
+                                setBrandOpen(false)
+                                setBrandOrder((prev) => [b, ...prev.filter((x) => x !== b)])
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                                field.value === b
+                                  ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-medium'
+                                  : ''
+                              }`}
+                            >
+                              {b}
+                            </button>
+                          ))}
+                          {isNew && (
+                            <button
+                              type='button'
+                              onMouseDown={() => setBrandOpen(false)}
+                              className='w-full text-left px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-950 font-medium flex items-center gap-1.5 border-t border-gray-100 dark:border-gray-800'
+                            >
+                              <span className='text-base leading-none'>+</span>
+                              Create &ldquo;{field.value}&rdquo;
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
         </div>
         <div className='flex flex-col gap-5 md:flex-row'>

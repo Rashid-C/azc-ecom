@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 
-import { getProductById, getAllCategoriesForAdmin } from '@/lib/actions/product.actions'
+import { getProductById, getAllCategoriesForAdmin, getAllBrandsForAdmin } from '@/lib/actions/product.actions'
 import Link from 'next/link'
 import ProductForm from '../product-form'
 import { Metadata } from 'next'
@@ -20,9 +20,10 @@ const UpdateProduct = async (props: UpdateProductProps) => {
 
   const { id } = params
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, brands] = await Promise.all([
     getProductById(id),
     getAllCategoriesForAdmin(),
+    getAllBrandsForAdmin(),
   ])
   if (!product) notFound()
   return (
@@ -34,7 +35,7 @@ const UpdateProduct = async (props: UpdateProductProps) => {
       </div>
 
       <div className='my-8'>
-        <ProductForm type='Update' product={product} productId={product._id.toString()} categories={categories} />
+        <ProductForm type='Update' product={product} productId={product._id.toString()} categories={categories} brands={brands} />
       </div>
     </main>
   )

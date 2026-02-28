@@ -134,6 +134,12 @@ export async function getAllCategoriesForAdmin() {
   return categories as string[]
 }
 
+export async function getAllBrandsForAdmin() {
+  await connectToDatabase()
+  const brands = await Product.find().distinct('brand')
+  return brands as string[]
+}
+
 export async function getCategoriesWithImages() {
   await connectToDatabase()
   const categories = await Product.aggregate([

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <rect width="800" height="800" fill="#0a0a0a"/>
+
+  <g transform="translate(400,400) skewX(-5)">
+
+    <!-- A: left leg -->
+    <polygon points="-195,-150  -162,-150  -50,150  -83,150" fill="white"/>
+    <!-- A: right leg -->
+    <polygon points="-70,-150  -37,-150   75,150   42,150" fill="white"/>
+    <!-- A: crossbar -->
+    <rect x="-138" y="-12" width="100" height="26" fill="white"/>
+
+    <!-- Z: top bar -->
+    <rect x="-60" y="-150" width="170" height="30" fill="white"/>
+    <!-- Z: diagonal stroke -->
+    <polygon points="78,-120  110,-120  -48,120  -80,120" fill="white"/>
+    <!-- Z: bottom bar -->
+    <rect x="-80" y="120" width="170" height="30" fill="white"/>
+
+    <!-- C: top arm -->
+    <rect x="62" y="-150" width="135" height="30" fill="white"/>
+    <!-- C: right vertical -->
+    <rect x="165" y="-150" width="32" height="300" fill="white"/>
+    <!-- C: bottom arm -->
+    <rect x="62" y="120" width="135" height="30" fill="white"/>
+
+  </g>
+</svg>
