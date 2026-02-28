@@ -263,19 +263,29 @@ const ProductForm = ({
                 <FormLabel>Images</FormLabel>
                 <Card>
                   <CardContent className='space-y-2 mt-2 min-h-48'>
-                    <div className='flex justify-start items-center space-x-2'>
-                      {images.map((image: string) => (
-                        <div key={image} className='relative'>
+                    <div className='flex flex-wrap justify-start items-center gap-3'>
+                      {images.map((image: string, idx: number) => {
+                        const colors = [
+                          'bg-blue-100 dark:bg-blue-950 ring-blue-400',
+                          'bg-emerald-100 dark:bg-emerald-950 ring-emerald-400',
+                          'bg-violet-100 dark:bg-violet-950 ring-violet-400',
+                          'bg-amber-100 dark:bg-amber-950 ring-amber-400',
+                          'bg-rose-100 dark:bg-rose-950 ring-rose-400',
+                          'bg-cyan-100 dark:bg-cyan-950 ring-cyan-400',
+                        ]
+                        const color = colors[idx % colors.length]
+                        return (
+                        <div key={image} className={`relative p-1.5 rounded-xl ring-2 ${color}`}>
                           <Image
                             src={image}
                             alt='product image'
-                            className='w-20 h-20 object-cover object-center rounded-sm'
+                            className='w-20 h-20 object-cover object-center rounded-lg'
                             width={100}
                             height={100}
                           />
                           <button
                             type='button'
-                            className='absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none'
+                            className='absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none shadow'
                             onClick={() =>
                               form.setValue(
                                 'images',
@@ -286,7 +296,8 @@ const ProductForm = ({
                             ✕
                           </button>
                         </div>
-                      ))}
+                        )
+                      })}
                       <FormControl>
                         <UploadButton
                           endpoint='imageUploader'
@@ -298,6 +309,10 @@ const ProductForm = ({
                               variant: 'destructive',
                               description: `ERROR! ${error.message}`,
                             })
+                          }}
+                          appearance={{
+                            button: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold rounded-full px-5 py-2 shadow transition-colors',
+                            allowedContent: 'text-amber-600 dark:text-amber-400 font-medium bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full',
                           }}
                         />
                       </FormControl>
