@@ -21,13 +21,13 @@ export default async function Search() {
   return (
     <form action='/search' method='GET' className='flex  items-stretch h-10 '>
       <Select name='category'>
-        <SelectTrigger className='w-auto h-full dark:border-gray-200 bg-gray-100 text-black border-r  rounded-r-none rounded-l-md rtl:rounded-r-md rtl:rounded-l-none  '>
+        <SelectTrigger className='w-auto h-full bg-gray-700 text-white border-none rounded-r-none rounded-l-md rtl:rounded-r-md rtl:rounded-l-none hover:bg-gray-600 transition-colors'>
           <SelectValue placeholder={t('Header.All')} />
         </SelectTrigger>
-        <SelectContent position='popper'>
-          <SelectItem value='all'>{t('Header.All')}</SelectItem>
+        <SelectContent position='popper' className='bg-white text-gray-900 border border-gray-200'>
+          <SelectItem value='all' className='text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900'>{t('Header.All')}</SelectItem>
           {categories.map((category) => (
-            <SelectItem key={category} value={category}>
+            <SelectItem key={category} value={category} className='text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900'>
               {category}
             </SelectItem>
           ))}
