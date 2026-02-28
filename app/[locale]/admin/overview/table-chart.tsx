@@ -27,13 +27,10 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ value }) => {
   const boundedValue = Math.min(100, Math.max(0, value))
 
   return (
-    <div className='relative w-full h-4 overflow-hidden'>
+    <div className='relative w-full h-4 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700'>
       <div
-        className='bg-primary h-full transition-all duration-300 rounded-lg'
-        style={{
-          width: `${boundedValue}%`,
-          float: 'right', // Aligns the bar to start from the right
-        }}
+        className='bg-blue-600 dark:bg-blue-500 h-full transition-all duration-300 rounded-lg'
+        style={{ width: `${boundedValue}%` }}
       />
     </div>
   )
