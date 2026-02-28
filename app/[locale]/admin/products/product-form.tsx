@@ -86,8 +86,16 @@ const ProductForm = ({
   const router = useRouter()
   const [catOpen, setCatOpen] = useState(false)
   const [brandOpen, setBrandOpen] = useState(false)
-  const [catOrder, setCatOrder] = useState<string[]>(categories)
-  const [brandOrder, setBrandOrder] = useState<string[]>(brands)
+  const [catOrder, setCatOrder] = useState<string[]>(() => {
+    const cur = product?.category
+    if (cur) return [cur, ...categories.filter((c) => c !== cur)]
+    return categories
+  })
+  const [brandOrder, setBrandOrder] = useState<string[]>(() => {
+    const cur = product?.brand
+    if (cur) return [cur, ...brands.filter((b) => b !== cur)]
+    return brands
+  })
 
   const form = useForm<IProductInput>({
     resolver: (
