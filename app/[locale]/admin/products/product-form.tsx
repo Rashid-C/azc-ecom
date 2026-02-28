@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useForm, Resolver } from 'react-hook-form'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -73,12 +74,15 @@ const ProductForm = ({
   type,
   product,
   productId,
+  categories = [],
 }: {
   type: 'Create' | 'Update'
   product?: IProduct
   productId?: string
+  categories?: string[]
 }) => {
   const router = useRouter()
+  const [catOpen, setCatOpen] = useState(false)
 
   const form = useForm<IProductInput>({
     resolver: (
@@ -182,15 +186,70 @@ const ProductForm = ({
           <FormField
             control={form.control}
             name='category'
-            render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Category</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter category' {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const filtered = categories.filter((c) =>
+                c.toLowerCase().includes((field.value ?? '').toLowerCase())
+              )
+              const isNew =
+                field.value.trim() !== '' &&
+                !categories.some(
+                  (c) => c.toLowerCase() === field.value.toLowerCase()
+                )
+              return (
+                <FormItem className='w-full'>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <div className='relative'>
+                      <Input
+                        placeholder='Select or create category'
+                        {...field}
+                        autoComplete='off'
+                        onChange={(e) => {
+                          field.onChange(e.target.value)
+                          setCatOpen(true)
+                        }}
+                        onFocus={() => setCatOpen(true)}
+                        onBlur={() =>
+                          setTimeout(() => setCatOpen(false), 150)
+                        }
+                      />
+                      {catOpen && (filtered.length > 0 || isNew) && (
+                        <div className='absolute z-20 w-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-52 overflow-auto'>
+                          {filtered.map((cat) => (
+                            <button
+                              key={cat}
+                              type='button'
+                              onMouseDown={() => {
+                                field.onChange(cat)
+                                setCatOpen(false)
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${
+                                field.value === cat
+                                  ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-medium'
+                                  : ''
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                          {isNew && (
+                            <button
+                              type='button'
+                              onMouseDown={() => setCatOpen(false)}
+                              className='w-full text-left px-3 py-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-950 font-medium flex items-center gap-1.5 border-t border-gray-100 dark:border-gray-800'
+                            >
+                              <span className='text-base leading-none'>+</span>
+                              Create &ldquo;{field.value}&rdquo;
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
           />
 
           <FormField
@@ -216,7 +275,14 @@ const ProductForm = ({
               <FormItem className='w-full'>
                 <FormLabel>List Price</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter product list price' {...field} />
+                  <Input
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    placeholder='0.00'
+                    {...field}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -229,7 +295,14 @@ const ProductForm = ({
               <FormItem className='w-full'>
                 <FormLabel>Net Price</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter product price' {...field} />
+                  <Input
+                    type='number'
+                    min='0'
+                    step='0.01'
+                    placeholder='0.00'
+                    {...field}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

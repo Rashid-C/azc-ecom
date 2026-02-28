@@ -128,6 +128,12 @@ export async function getAllCategories() {
   return categories
 }
 
+export async function getAllCategoriesForAdmin() {
+  await connectToDatabase()
+  const categories = await Product.find().distinct('category')
+  return categories as string[]
+}
+
 export async function getCategoriesWithImages() {
   await connectToDatabase()
   const categories = await Product.aggregate([
