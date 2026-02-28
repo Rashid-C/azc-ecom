@@ -265,14 +265,27 @@ const ProductForm = ({
                   <CardContent className='space-y-2 mt-2 min-h-48'>
                     <div className='flex justify-start items-center space-x-2'>
                       {images.map((image: string) => (
-                        <Image
-                          key={image}
-                          src={image}
-                          alt='product image'
-                          className='w-20 h-20 object-cover object-center rounded-sm'
-                          width={100}
-                          height={100}
-                        />
+                        <div key={image} className='relative'>
+                          <Image
+                            src={image}
+                            alt='product image'
+                            className='w-20 h-20 object-cover object-center rounded-sm'
+                            width={100}
+                            height={100}
+                          />
+                          <button
+                            type='button'
+                            className='absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs leading-none'
+                            onClick={() =>
+                              form.setValue(
+                                'images',
+                                images.filter((img: string) => img !== image)
+                              )
+                            }
+                          >
+                            ✕
+                          </button>
+                        </div>
                       ))}
                       <FormControl>
                         <UploadButton

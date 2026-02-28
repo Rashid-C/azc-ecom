@@ -127,6 +127,21 @@ export async function getAllCategories() {
   )
   return categories
 }
+
+export async function getCategoriesWithImages() {
+  await connectToDatabase()
+  const categories = await Product.aggregate([
+    { $match: { isPublished: true } },
+    {
+      $group: {
+        _id: '$category',
+        image: { $first: { $arrayElemAt: ['$images', 0] } },
+      },
+    },
+    { $project: { _id: 0, name: '$_id', image: 1 } },
+  ])
+  return categories as { name: string; image: string }[]
+}
 export async function getProductsForCard({
   tag,
   limit = 4,

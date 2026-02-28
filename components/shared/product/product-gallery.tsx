@@ -31,17 +31,13 @@ export default function ProductGallery({ images }: { images: string[] }) {
             </div>
 
             <div className='w-full'>
-                <Zoom zoomImg={{ src: galleryImages[selectedImage], alt: 'product image' }}>
-                    <div className='relative h-[500px]'>
-                        <Image
-                            src={galleryImages[selectedImage]}
-                            alt={'product image'}
-                            fill
-                            sizes='90vw'
-                            className='object-contain'
-                            priority
-                        />
-                    </div>
+                <Zoom>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={galleryImages[selectedImage]}
+                        alt='product image'
+                        className='h-125 w-full object-contain'
+                    />
                 </Zoom>
             </div>
         </div>

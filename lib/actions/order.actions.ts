@@ -1,23 +1,19 @@
-
 'use server'
+
 import { Cart, IOrderList, OrderItem, ShippingAddress } from '@/types'
-import { formatCurrency, formatDateTime, formatError, round2 } from '../utils'
-import { AVAILABLE_DELIVERY_DATES, PAGE_SIZE } from '../constants'
+import { formatError, round2 } from '../utils'
 import { connectToDatabase } from '../db'
 import { auth } from '@/auth'
 import { OrderInputSchema } from '../validator'
 import Order, { IOrder } from '../db/models/order.model'
-import { Resend } from 'resend'
-import { sendAskReviewOrderItems, sendPurchaseReceipt } from '@/emails'
 import { revalidatePath } from 'next/cache'
+import { sendAskReviewOrderItems, sendPurchaseReceipt } from '@/emails'
 import { paypal } from '../paypal'
 import { DateRange } from 'react-day-picker'
-import User from '../db/models/user.model'
 import Product from '../db/models/product.model'
+import User from '../db/models/user.model'
 import mongoose from 'mongoose'
 import { getSetting } from './setting.actions'
-
-
 
 // CREATE
 export const createOrder = async (clientSideCart: Cart) => {
@@ -66,8 +62,268 @@ export const createOrderFromCart = async (
   return await Order.create(order)
 }
 
+export async function updateOrderToPaid(orderId: string) {
+  try {
+    await connectToDatabase()
+    const order = await Order.findById(orderId).populate<{
+      user: { email: string; name: string }
+    }>('user', 'name email')
+    if (!order) throw new Error('Order not found')
+    if (order.isPaid) throw new Error('Order is already paid')
+    order.isPaid = true
+    order.paidAt = new Date()
+    await order.save()
+    if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
+      await updateProductStock(order._id.toString())
+    if (order.user.email) await sendPurchaseReceipt({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+    return { success: true, message: 'Order paid successfully' }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+const updateProductStock = async (orderId: string) => {
+  const session = await mongoose.connection.startSession()
 
-// GET ORDERS
+  try {
+    session.startTransaction()
+    const opts = { session }
+
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId },
+      { isPaid: true, paidAt: new Date() },
+      opts
+    )
+    if (!order) throw new Error('Order not found')
+
+    for (const item of order.items) {
+      const product = await Product.findById(item.product).session(session)
+      if (!product) throw new Error('Product not found')
+
+      product.countInStock -= item.quantity
+      await Product.updateOne(
+        { _id: product._id },
+        { countInStock: product.countInStock },
+        opts
+      )
+    }
+    await session.commitTransaction()
+    session.endSession()
+    return true
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error
+  }
+}
+export async function deliverOrder(orderId: string) {
+  try {
+    await connectToDatabase()
+    const order = await Order.findById(orderId).populate<{
+      user: { email: string; name: string }
+    }>('user', 'name email')
+    if (!order) throw new Error('Order not found')
+    if (!order.isPaid) throw new Error('Order is not paid')
+    order.isDelivered = true
+    order.deliveredAt = new Date()
+    await order.save()
+    if (order.user.email) await sendAskReviewOrderItems({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+    return { success: true, message: 'Order delivered successfully' }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+// DELETE
+export async function deleteOrder(id: string) {
+  try {
+    await connectToDatabase()
+    const res = await Order.findByIdAndDelete(id)
+    if (!res) throw new Error('Order not found')
+    revalidatePath('/admin/orders')
+    return {
+      success: true,
+      message: 'Order deleted successfully',
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+// GET ALL ORDERS
+
+export async function getAllOrders({
+  limit,
+  page,
+}: {
+  limit?: number
+  page: number
+}) {
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
+  await connectToDatabase()
+  const skipAmount = (Number(page) - 1) * limit
+  const orders = await Order.find()
+    .populate('user', 'name')
+    .sort({ createdAt: 'desc' })
+    .skip(skipAmount)
+    .limit(limit)
+  const ordersCount = await Order.countDocuments()
+  return {
+    data: JSON.parse(JSON.stringify(orders)) as IOrderList[],
+    totalPages: Math.ceil(ordersCount / limit),
+  }
+}
+export async function getMyOrders({
+  limit,
+  page,
+}: {
+  limit?: number
+  page: number
+}) {
+  const {
+    common: { pageSize },
+  } = await getSetting()
+  limit = limit || pageSize
+  await connectToDatabase()
+  const session = await auth()
+  if (!session) {
+    throw new Error('User is not authenticated')
+  }
+  const skipAmount = (Number(page) - 1) * limit
+  const orders = await Order.find({
+    user: session?.user?.id,
+  })
+    .sort({ createdAt: 'desc' })
+    .skip(skipAmount)
+    .limit(limit)
+  const ordersCount = await Order.countDocuments({ user: session?.user?.id })
+
+  return {
+    data: JSON.parse(JSON.stringify(orders)),
+    totalPages: Math.ceil(ordersCount / limit),
+  }
+}
+export async function getOrderById(orderId: string): Promise<IOrder> {
+  await connectToDatabase()
+  const order = await Order.findById(orderId)
+  return JSON.parse(JSON.stringify(order))
+}
+
+export async function createPayPalOrder(orderId: string) {
+  await connectToDatabase()
+  try {
+    const order = await Order.findById(orderId)
+    if (order) {
+      const paypalOrder = await paypal.createOrder(order.totalPrice)
+      order.paymentResult = {
+        id: paypalOrder.id,
+        email_address: '',
+        status: '',
+        pricePaid: '0',
+      }
+      await order.save()
+      return {
+        success: true,
+        message: 'PayPal order created successfully',
+        data: paypalOrder.id,
+      }
+    } else {
+      throw new Error('Order not found')
+    }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+export async function approvePayPalOrder(
+  orderId: string,
+  data: { orderID: string }
+) {
+  await connectToDatabase()
+  try {
+    const order = await Order.findById(orderId).populate('user', 'email')
+    if (!order) throw new Error('Order not found')
+
+    const captureData = await paypal.capturePayment(data.orderID)
+    if (
+      !captureData ||
+      captureData.id !== order.paymentResult?.id ||
+      captureData.status !== 'COMPLETED'
+    )
+      throw new Error('Error in paypal payment')
+    order.isPaid = true
+    order.paidAt = new Date()
+    order.paymentResult = {
+      id: captureData.id,
+      status: captureData.status,
+      email_address: captureData.payer.email_address,
+      pricePaid:
+        captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
+    }
+    await order.save()
+    await sendPurchaseReceipt({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+    return {
+      success: true,
+      message: 'Your order has been successfully paid by PayPal',
+    }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+export const calcDeliveryDateAndPrice = async ({
+  items,
+  shippingAddress,
+  deliveryDateIndex,
+}: {
+  deliveryDateIndex?: number
+  items: OrderItem[]
+  shippingAddress?: ShippingAddress
+}) => {
+  const { availableDeliveryDates } = await getSetting()
+  const itemsPrice = round2(
+    items.reduce((acc, item) => acc + item.price * item.quantity, 0)
+  )
+
+  const deliveryDate =
+    availableDeliveryDates[
+      deliveryDateIndex === undefined
+        ? availableDeliveryDates.length - 1
+        : deliveryDateIndex
+    ]
+  const shippingPrice =
+    !shippingAddress || !deliveryDate
+      ? undefined
+      : deliveryDate.freeShippingMinPrice > 0 &&
+          itemsPrice >= deliveryDate.freeShippingMinPrice
+        ? 0
+        : deliveryDate.shippingPrice
+
+  const taxPrice = !shippingAddress ? undefined : round2(itemsPrice * 0.15)
+  const totalPrice = round2(
+    itemsPrice +
+      (shippingPrice ? round2(shippingPrice) : 0) +
+      (taxPrice ? round2(taxPrice) : 0)
+  )
+  return {
+    availableDeliveryDates,
+    deliveryDateIndex:
+      deliveryDateIndex === undefined
+        ? availableDeliveryDates.length - 1
+        : deliveryDateIndex,
+    itemsPrice,
+    shippingPrice,
+    taxPrice,
+    totalPrice,
+  }
+}
+
+// GET ORDERS BY USER
 export async function getOrderSummary(date: DateRange) {
   await connectToDatabase()
 
@@ -142,12 +398,10 @@ export async function getOrderSummary(date: DateRange) {
   const topSalesCategories = await getTopSalesCategories(date)
   const topSalesProducts = await getTopSalesProducts(date)
 
-
   const {
     common: { pageSize },
   } = await getSetting()
   const limit = pageSize
-
   const latestOrders = await Order.find()
     .populate('user', 'name')
     .sort({ createdAt: 'desc' })
@@ -284,506 +538,3 @@ async function getTopSalesCategories(date: DateRange, limit = 5) {
 
   return result
 }
-
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null
-
-const getSenderEmail = () => {
-  const senderEmail = process.env.SENDER_EMAIL?.trim()
-  const senderName = process.env.SENDER_NAME?.trim()
-  if (!senderEmail) return null
-  return senderName ? `${senderName} <${senderEmail}>` : senderEmail
-}
-
-const sendOrderConfirmationEmail = async ({
-  to,
-  orderId,
-  totalPrice,
-  expectedDeliveryDate,
-}: {
-  to?: string | null
-  orderId: string
-  totalPrice: number
-  expectedDeliveryDate: Date
-}) => {
-  try {
-    if (!resend || !to) return
-
-    const from = getSenderEmail()
-    if (!from) return
-
-    const deliveryDate = formatDateTime(expectedDeliveryDate).dateOnly
-    const total = formatCurrency(totalPrice)
-
-    const { error } = await resend.emails.send({
-      from,
-      to,
-      subject: `Order confirmation #${orderId}`,
-      html: `
-                <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-                    <h2>Thanks for your order</h2>
-                    <p>Your order <strong>#${orderId}</strong> has been placed successfully.</p>
-                    <p><strong>Total:</strong> ${total}</p>
-                    <p><strong>Expected delivery:</strong> ${deliveryDate}</p>
-                </div>
-            `,
-      text: `Thanks for your order. Order #${orderId} has been placed successfully. Total: ${total}. Expected delivery: ${deliveryDate}.`,
-    })
-
-    if (error) {
-      console.error('Failed to send order confirmation email:', error.message)
-    }
-  } catch (error) {
-    console.error('Unexpected email error:', formatError(error))
-  }
-}
-
-// // CREATE
-// export const createOrder = async (clientSideCart: Cart) => {
-//   try {
-//     await connectToDatabase()
-//     const session = await auth()
-//     if (!session) throw new Error('User not authenticated')
-//     // recalculate price and delivery date on the server
-//     const createdOrder = await createOrderFromCart(
-//       clientSideCart,
-//       session.user.id!
-//     )
-
-//     await sendOrderConfirmationEmail({
-//       to: session.user.email,
-//       orderId: createdOrder._id.toString(),
-//       totalPrice: createdOrder.totalPrice,
-//       expectedDeliveryDate: createdOrder.expectedDeliveryDate,
-//     })
-
-//     return {
-//       success: true,
-//       message: 'Order placed successfully',
-//       data: { orderId: createdOrder._id.toString() },
-//     }
-//   } catch (error) {
-//     return { success: false, message: formatError(error) }
-//   }
-// }
-// export const createOrderFromCart = async (
-//   clientSideCart: Cart,
-//   userId: string
-// ) => {
-//   const cart = {
-//     ...clientSideCart,
-//     ...(await calcDeliveryDateAndPrice({
-//       items: clientSideCart.items,
-//       shippingAddress: clientSideCart.shippingAddress,
-//       deliveryDateIndex: clientSideCart.deliveryDateIndex,
-//     })),
-//   }
-
-//   const order = OrderInputSchema.parse({
-//     user: userId,
-//     items: cart.items,
-//     shippingAddress: cart.shippingAddress,
-//     paymentMethod: cart.paymentMethod,
-//     itemsPrice: cart.itemsPrice,
-//     shippingPrice: cart.shippingPrice,
-//     taxPrice: cart.taxPrice,
-//     totalPrice: cart.totalPrice,
-//     expectedDeliveryDate: cart.expectedDeliveryDate,
-//   })
-//   return await Order.create(order)
-// }
-
-
-
-
-// export async function getOrderById(orderId: string): Promise<IOrder> {
-//   await connectToDatabase()
-//   const order = await Order.findById(orderId)
-//   return JSON.parse(JSON.stringify(order))
-// }
-
-// export async function createPayPalOrder(orderId: string) {
-//   await connectToDatabase()
-//   try {
-//     const order = await Order.findById(orderId)
-//     if (order) {
-//       const paypalOrder = await paypal.createOrder(order.totalPrice)
-//       order.paymentResult = {
-//         id: paypalOrder.id,
-//         email_address: '',
-//         status: '',
-//         pricePaid: '0',
-//       }
-//       await order.save()
-//       return {
-//         success: true,
-//         message: 'PayPal order created successfully',
-//         data: paypalOrder.id,
-//       }
-//     } else {
-//       throw new Error('Order not found')
-//     }
-//   } catch (err) {
-//     return { success: false, message: formatError(err) }
-//   }
-// }
-
-// export async function approvePayPalOrder(
-//   orderId: string,
-//   data: { orderID: string }
-// ) {
-//   await connectToDatabase()
-//   try {
-//     const order = await Order.findById(orderId).populate('user', 'email')
-//     if (!order) throw new Error('Order not found')
-
-//     const captureData = await paypal.capturePayment(data.orderID)
-//     if (
-//       !captureData ||
-//       captureData.id !== order.paymentResult?.id ||
-//       captureData.status !== 'COMPLETED'
-//     )
-//       throw new Error('Error in paypal payment')
-//     order.isPaid = true
-//     order.paidAt = new Date()
-//     order.paymentResult = {
-//       id: captureData.id,
-//       status: captureData.status,
-//       email_address: captureData.payer.email_address,
-//       pricePaid:
-//         captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
-//     }
-//     await order.save()
-//     try {
-//       await sendPurchaseReceipt({ order })
-//     } catch (emailError) {
-//       console.error('Failed to send purchase receipt:', formatError(emailError))
-//     }
-//     revalidatePath(`/account/orders/${orderId}`)
-//     return {
-//       success: true,
-//       message: 'Your order has been successfully paid by PayPal',
-//     }
-//   } catch (err) {
-//     return { success: false, message: formatError(err) }
-//   }
-// }
-
-export async function updateStripeOrderToPaid({
-  orderId,
-  paymentIntentId,
-  email,
-  pricePaid,
-}: {
-  orderId: string
-  paymentIntentId: string
-  email?: string | null
-  pricePaid: string
-}) {
-  await connectToDatabase()
-  try {
-    const order = await Order.findById(orderId).populate('user', 'email')
-    if (!order) throw new Error('Order not found')
-
-    if (order.isPaid) {
-      return { success: true, message: 'Order already marked as paid' }
-    }
-
-    order.isPaid = true
-    order.paidAt = new Date()
-    order.paymentResult = {
-      id: paymentIntentId,
-      status: 'COMPLETED',
-      email_address: email || '',
-      pricePaid,
-    }
-
-    await order.save()
-    try {
-      await sendPurchaseReceipt({ order })
-    } catch (emailError) {
-      console.error('Failed to send purchase receipt:', formatError(emailError))
-    }
-    revalidatePath(`/account/orders/${orderId}`)
-    revalidatePath(`/checkout/${orderId}`)
-
-    return {
-      success: true,
-      message: 'Your order has been successfully paid by Stripe',
-    }
-  } catch (err) {
-    return { success: false, message: formatError(err) }
-  }
-}
-
-
-
-
-
-export async function updateOrderToPaid(orderId: string) {
-  try {
-    await connectToDatabase()
-    const order = await Order.findById(orderId).populate<{
-      user: { email: string; name: string }
-    }>('user', 'name email')
-    if (!order) throw new Error('Order not found')
-    if (order.isPaid) throw new Error('Order is already paid')
-    order.isPaid = true
-    order.paidAt = new Date()
-    await order.save()
-    if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
-      await updateProductStock(order._id.toString())
-    if (order.user.email) await sendPurchaseReceipt({ order })
-    revalidatePath(`/account/orders/${orderId}`)
-    return { success: true, message: 'Order paid successfully' }
-  } catch (err) {
-    return { success: false, message: formatError(err) }
-  }
-}
-
-const updateProductStock = async (orderId: string) => {
-  const session = await mongoose.connection.startSession()
-
-  try {
-    session.startTransaction()
-    const opts = { session }
-
-    const order = await Order.findOneAndUpdate(
-      { _id: orderId },
-      { isPaid: true, paidAt: new Date() },
-      opts
-    )
-    if (!order) throw new Error('Order not found')
-
-    for (const item of order.items) {
-      const product = await Product.findById(item.product).session(session)
-      if (!product) throw new Error('Product not found')
-
-      product.countInStock -= item.quantity
-      await Product.updateOne(
-        { _id: product._id },
-        { countInStock: product.countInStock },
-        opts
-      )
-    }
-    await session.commitTransaction()
-    session.endSession()
-    return true
-  } catch (error) {
-    await session.abortTransaction()
-    session.endSession()
-    throw error
-  }
-}
-export async function deliverOrder(orderId: string) {
-  try {
-    await connectToDatabase()
-    const order = await Order.findById(orderId).populate<{
-      user: { email: string; name: string }
-    }>('user', 'name email')
-    if (!order) throw new Error('Order not found')
-    if (!order.isPaid) throw new Error('Order is not paid')
-    order.isDelivered = true
-    order.deliveredAt = new Date()
-    await order.save()
-    if (order.user.email) await sendAskReviewOrderItems({ order })
-    revalidatePath(`/account/orders/${orderId}`)
-    return { success: true, message: 'Order delivered successfully' }
-  } catch (err) {
-    return { success: false, message: formatError(err) }
-  }
-}
-
-// DELETE
-export async function deleteOrder(id: string) {
-  try {
-    await connectToDatabase()
-    const res = await Order.findByIdAndDelete(id)
-    if (!res) throw new Error('Order not found')
-    revalidatePath('/admin/orders')
-    return {
-      success: true,
-      message: 'Order deleted successfully',
-    }
-  } catch (error) {
-    return { success: false, message: formatError(error) }
-  }
-}
-
-// GET ALL ORDERS
-
-export async function getAllOrders({
-  limit,
-  page,
-}: {
-  limit?: number
-  page: number
-}) {
-  const {
-    common: { pageSize },
-  } = await getSetting()
-  limit = limit || pageSize
-  await connectToDatabase()
-  const skipAmount = (Number(page) - 1) * limit
-  const orders = await Order.find()
-    .populate('user', 'name')
-    .sort({ createdAt: 'desc' })
-    .skip(skipAmount)
-    .limit(limit)
-  const ordersCount = await Order.countDocuments()
-  return {
-    data: JSON.parse(JSON.stringify(orders)) as IOrderList[],
-    totalPages: Math.ceil(ordersCount / limit),
-  }
-}
-
-
-
-export async function getMyOrders({
-  limit,
-  page,
-}: {
-  limit?: number
-  page: number
-}) {
-  const {
-    common: { pageSize },
-  } = await getSetting()
-  limit = limit || pageSize
-  await connectToDatabase()
-  const session = await auth()
-  if (!session) {
-    throw new Error('User is not authenticated')
-  }
-  const skipAmount = (Number(page) - 1) * limit
-  const orders = await Order.find({
-    user: session?.user?.id,
-  })
-    .sort({ createdAt: 'desc' })
-    .skip(skipAmount)
-    .limit(limit)
-  const ordersCount = await Order.countDocuments({ user: session?.user?.id })
-
-  return {
-    data: JSON.parse(JSON.stringify(orders)),
-    totalPages: Math.ceil(ordersCount / limit),
-  }
-}
-export async function getOrderById(orderId: string): Promise<IOrder> {
-  await connectToDatabase()
-  const order = await Order.findById(orderId)
-  return JSON.parse(JSON.stringify(order))
-}
-
-export async function createPayPalOrder(orderId: string) {
-  await connectToDatabase()
-  try {
-    const order = await Order.findById(orderId)
-    if (order) {
-      const paypalOrder = await paypal.createOrder(order.totalPrice)
-      order.paymentResult = {
-        id: paypalOrder.id,
-        email_address: '',
-        status: '',
-        pricePaid: '0',
-      }
-      await order.save()
-      return {
-        success: true,
-        message: 'PayPal order created successfully',
-        data: paypalOrder.id,
-      }
-    } else {
-      throw new Error('Order not found')
-    }
-  } catch (err) {
-    return { success: false, message: formatError(err) }
-  }
-}
-
-export async function approvePayPalOrder(
-  orderId: string,
-  data: { orderID: string }
-) {
-  await connectToDatabase()
-  try {
-    const order = await Order.findById(orderId).populate('user', 'email')
-    if (!order) throw new Error('Order not found')
-
-    const captureData = await paypal.capturePayment(data.orderID)
-    if (
-      !captureData ||
-      captureData.id !== order.paymentResult?.id ||
-      captureData.status !== 'COMPLETED'
-    )
-      throw new Error('Error in paypal payment')
-    order.isPaid = true
-    order.paidAt = new Date()
-    order.paymentResult = {
-      id: captureData.id,
-      status: captureData.status,
-      email_address: captureData.payer.email_address,
-      pricePaid:
-        captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
-    }
-    await order.save()
-    await sendPurchaseReceipt({ order })
-    revalidatePath(`/account/orders/${orderId}`)
-    return {
-      success: true,
-      message: 'Your order has been successfully paid by PayPal',
-    }
-  } catch (err) {
-    return { success: false, message: formatError(err) }
-  }
-}
-
-export const calcDeliveryDateAndPrice = async ({
-  items,
-  shippingAddress,
-  deliveryDateIndex,
-}: {
-  deliveryDateIndex?: number
-  items: OrderItem[]
-  shippingAddress?: ShippingAddress
-}) => {
-  const { availableDeliveryDates } = await getSetting()
-  const itemsPrice = round2(
-    items.reduce((acc, item) => acc + item.price * item.quantity, 0)
-  )
-
-  const deliveryDate =
-    availableDeliveryDates[
-    deliveryDateIndex === undefined
-      ? availableDeliveryDates.length - 1
-      : deliveryDateIndex
-    ]
-  const shippingPrice =
-    !shippingAddress || !deliveryDate
-      ? undefined
-      : deliveryDate.freeShippingMinPrice > 0 &&
-        itemsPrice >= deliveryDate.freeShippingMinPrice
-        ? 0
-        : deliveryDate.shippingPrice
-
-  const taxPrice = !shippingAddress ? undefined : round2(itemsPrice * 0.15)
-  const totalPrice = round2(
-    itemsPrice +
-    (shippingPrice ? round2(shippingPrice) : 0) +
-    (taxPrice ? round2(taxPrice) : 0)
-  )
-  return {
-    availableDeliveryDates,
-    deliveryDateIndex:
-      deliveryDateIndex === undefined
-        ? availableDeliveryDates.length - 1
-        : deliveryDateIndex,
-    itemsPrice,
-    shippingPrice,
-    taxPrice,
-    totalPrice,
-  }
-}
-
-// GET ORDERS BY USER

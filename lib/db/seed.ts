@@ -1,17 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import data from '@/lib/data'
 import { connectToDatabase } from '.'
+import User from './models/user.model'
 import Product from './models/product.model'
+import Review from './models/review.model'
 import { cwd } from 'process'
 import { loadEnvConfig } from '@next/env'
-import User from './models/user.model'
-import Review from './models/review.model'
 import Order from './models/order.model'
-import { IOrderInput, OrderItem, ShippingAddress } from '@/types'
-import { calculateFutureDate, calculatePastDate, generateId, round2 } from '../utils'
-import { AVAILABLE_DELIVERY_DATES } from '../constants'
-import Setting from './models/setting.model'
+import {
+  calculateFutureDate,
+  calculatePastDate,
+  generateId,
+  round2,
+} from '../utils'
 import WebPage from './models/web-page.model'
+import Setting from './models/setting.model'
+import { OrderItem, IOrderInput, ShippingAddress } from '@/types'
 
 loadEnvConfig(cwd())
 
@@ -44,7 +47,7 @@ const main = async () => {
           x++
           rws.push({
             ...reviews.filter((x) => x.rating === j + 1)[
-            x % reviews.filter((x) => x.rating === j + 1).length
+              x % reviews.filter((x) => x.rating === j + 1).length
             ],
             isVerifiedPurchase: true,
             product: createdProducts[i]._id,
@@ -56,7 +59,6 @@ const main = async () => {
       }
     }
     const createdReviews = await Review.insertMany(rws)
-
 
     await Order.deleteMany()
     const orders = []
@@ -75,17 +77,15 @@ const main = async () => {
       createdProducts,
       createdReviews,
       createdOrders,
-       createdSetting,
-      message: 'Seeded products successfully',
+      createdSetting,
+      message: 'Seeded database successfully',
     })
     process.exit(0)
   } catch (error) {
-    console.log(error)
+    console.error(error)
     throw new Error('Failed to seed database')
   }
 }
-
-
 
 const generateOrder = async (
   i: number,
@@ -96,22 +96,22 @@ const generateOrder = async (
 
   const product2 = await Product.findById(
     products[
-    i % products.length >= products.length - 1
-      ? (i % products.length) - 1
-      : (i % products.length) + 1
+      i % products.length >= products.length - 1
+        ? (i % products.length) - 1
+        : (i % products.length) + 1
     ]
   )
   const product3 = await Product.findById(
     products[
-    i % products.length >= products.length - 2
-      ? (i % products.length) - 2
-      : (i % products.length) + 2
+      i % products.length >= products.length - 2
+        ? (i % products.length) - 2
+        : (i % products.length) + 2
     ]
   )
 
   if (!product1 || !product2 || !product3) throw new Error('Product not found')
 
-  const items: OrderItem[] = [
+  const items = [
     {
       clientId: generateId(),
       product: product1._id.toString(),
@@ -148,7 +148,7 @@ const generateOrder = async (
   ]
 
   const order = {
-    user: users[i % users.length].toString(),
+    user: users[i % users.length],
     items: items.map((item) => ({
       ...item,
       product: item.product,
@@ -178,33 +178,31 @@ export const calcDeliveryDateAndPriceForSeed = ({
   items: OrderItem[]
   shippingAddress?: ShippingAddress
 }) => {
-   const { availableDeliveryDates } = data.settings[0]
+  const { availableDeliveryDates } = data.settings[0]
   const itemsPrice = round2(
     items.reduce((acc, item) => acc + item.price * item.quantity, 0)
   )
 
   const deliveryDate =
     availableDeliveryDates[
-    deliveryDateIndex === undefined
-      ? availableDeliveryDates.length - 1
-      : deliveryDateIndex
+      deliveryDateIndex === undefined
+        ? availableDeliveryDates.length - 1
+        : deliveryDateIndex
     ]
-
-
 
   const shippingPrice = deliveryDate.shippingPrice
 
   const taxPrice = round2(itemsPrice * 0.15)
   const totalPrice = round2(
     itemsPrice +
-    (shippingPrice ? round2(shippingPrice) : 0) +
-    (taxPrice ? round2(taxPrice) : 0)
+      (shippingPrice ? round2(shippingPrice) : 0) +
+      (taxPrice ? round2(taxPrice) : 0)
   )
   return {
-    AVAILABLE_DELIVERY_DATES,
+    availableDeliveryDates,
     deliveryDateIndex:
       deliveryDateIndex === undefined
-        ? AVAILABLE_DELIVERY_DATES.length - 1
+        ? availableDeliveryDates.length - 1
         : deliveryDateIndex,
     itemsPrice,
     shippingPrice,
@@ -213,4 +211,4 @@ export const calcDeliveryDateAndPriceForSeed = ({
   }
 }
 
-main()
+main()  
