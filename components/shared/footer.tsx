@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronUp } from 'lucide-react'
+import { ChevronUp, Globe, Github, Linkedin, Mail, Phone } from 'lucide-react'
 import { Button } from '../ui/button'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -89,7 +89,7 @@ export default function Footer() {
           </div>
         </div>
         <div className='border-t border-gray-800'>
-          <div className='max-w-7xl mx-auto py-8 px-4 flex flex-col items-center space-y-4'>
+          <div className='max-w-7xl mx-auto py-4 px-4 flex flex-col items-center space-y-2'>
             <div className='flex items-center space-x-4 flex-wrap md:flex-nowrap'>
               <Image
                 src='/icons/logo.svg'
@@ -107,8 +107,9 @@ export default function Footer() {
                 onValueChange={(value) => {
                   router.push(pathname, { locale: value })
                 }}
+                disabled
               >
-                <SelectTrigger>
+                <SelectTrigger className='opacity-70 cursor-not-allowed'>
                   <SelectValue placeholder={t('Footer.Select a language')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -131,8 +132,9 @@ export default function Footer() {
                   setCurrency(value)
                   window.scrollTo(0, 0)
                 }}
+                disabled
               >
-                <SelectTrigger>
+                <SelectTrigger className='opacity-70 cursor-not-allowed'>
                   <SelectValue placeholder={t('Footer.Select a currency')} />
                 </SelectTrigger>
                 <SelectContent>
@@ -150,7 +152,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className='p-4'>
+      <div className='px-4 py-2'>
         <div className='flex justify-center gap-3 text-sm'>
           <Link href='/page/conditions-of-use'>
             {t('Footer.Conditions of Use')}
@@ -161,8 +163,59 @@ export default function Footer() {
         <div className='flex justify-center text-sm'>
          <p> © {site.copyright}</p>
         </div>
-        <div className='mt-8 flex justify-center text-sm text-gray-400'>
+        <div className='mt-2 flex justify-center text-sm text-gray-400'>
           {site.address} | {site.phone}
+        </div>
+
+        {/* Developer credit */}
+        <div className='mt-3 pt-3 border-t border-gray-800 flex flex-col items-center gap-1.5'>
+          <p className='text-xs text-gray-500'>
+            Designed &amp; Developed by{' '}
+            <span className='text-gray-300 font-medium'>Rashid C</span>
+          </p>
+          <div className='flex items-center gap-3'>
+            <Link
+              href='https://www.rashidc.site'
+              target='_blank'
+              rel='noopener noreferrer'
+              title='Portfolio'
+              className='text-gray-500 hover:text-white transition-colors'
+            >
+              <Globe className='h-4 w-4' />
+            </Link>
+            <Link
+              href='https://github.com/Rashid-C'
+              target='_blank'
+              rel='noopener noreferrer'
+              title='GitHub'
+              className='text-gray-500 hover:text-white transition-colors'
+            >
+              <Github className='h-4 w-4' />
+            </Link>
+            <Link
+              href='https://www.linkedin.com/in/rashid-c/'
+              target='_blank'
+              rel='noopener noreferrer'
+              title='LinkedIn'
+              className='text-gray-500 hover:text-blue-400 transition-colors'
+            >
+              <Linkedin className='h-4 w-4' />
+            </Link>
+            <Link
+              href='mailto:anurashid105@gmail.com'
+              title='Email'
+              className='text-gray-500 hover:text-yellow-400 transition-colors'
+            >
+              <Mail className='h-4 w-4' />
+            </Link>
+            <Link
+              href='tel:+918078967913'
+              title='+91 8078967913'
+              className='text-gray-500 hover:text-green-400 transition-colors'
+            >
+              <Phone className='h-4 w-4' />
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
