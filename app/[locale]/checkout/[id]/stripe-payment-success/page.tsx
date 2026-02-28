@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import Stripe from 'stripe'
 
 import { Button } from '@/components/ui/button'
-import { getOrderById } from '@/lib/actions/order.actions'
+import { getOrderById, updateOrderToPaid } from '@/lib/actions/order.actions'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 
@@ -32,6 +32,13 @@ export default async function SuccessPage(props: {
 
   const isSuccess = paymentIntent.status === 'succeeded'
   if (!isSuccess) return redirect(`/checkout/${id}`)
+
+  // Mark the order paid here as a reliable fallback — the Stripe webhook
+  // may be delayed or not configured in local development.
+  if (!order.isPaid) {
+    await updateOrderToPaid(id)
+  }
+
   return (
     <div className='max-w-4xl w-full mx-auto space-y-8'>
       <div className='flex flex-col gap-6 items-center '>
@@ -39,7 +46,7 @@ export default async function SuccessPage(props: {
           Thanks for your purchase
         </h1>
         <div>We are now processing your order.</div>
-        <Button asChild>
+        <Button asChild className='rounded-full bg-emerald-600 hover:bg-emerald-700 text-white'>
           <Link href={`/account/orders/${id}`}>View order</Link>
         </Button>
       </div>

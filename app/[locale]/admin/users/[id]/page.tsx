@@ -22,14 +22,14 @@ export default async function UserEditPage(props: {
   const user = await getUserById(id)
   if (!user) notFound()
   return (
-    <main className='max-w-6xl mx-auto p-4'>
-      <div className='flex mb-4'>
+    <main className='max-w-3xl mx-auto p-4 sm:p-6'>
+      <div className='flex flex-wrap items-center mb-4 text-sm sm:text-base'>
         <Link href='/admin/users'>Users</Link>
-        <span className='mx-1'>›</span>
+        <span className='mx-1'>&gt;</span>
         <Link href={`/admin/users/${user._id}`}>{user._id.toString()}</Link>
       </div>
 
-      <div className='my-8'>
+      <div className='my-6 sm:my-8'>
         <UserEditForm user={user} />
       </div>
     </main>

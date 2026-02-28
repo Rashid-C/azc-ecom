@@ -105,7 +105,11 @@ const ProductList = () => {
             </div>
           </div>
 
-          <Button asChild variant='default'>
+          <Button
+            asChild
+            variant='default'
+            className='bg-blue-600 hover:bg-blue-700 text-white'
+          >
             <Link href='/admin/products/create'>Create Product</Link>
           </Button>
         </div>

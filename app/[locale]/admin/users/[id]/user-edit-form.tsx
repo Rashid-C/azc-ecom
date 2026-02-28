@@ -3,6 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useForm, Resolver } from 'react-hook-form'
+import { useState } from 'react'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
@@ -26,16 +27,19 @@ import { useToast } from '@/hooks/use-toast'
 import { updateUser } from '@/lib/actions/user.actions'
 import { USER_ROLES } from '@/lib/constants'
 import { IUser } from '@/lib/db/models/user.model'
+import { cn } from '@/lib/utils'
 import { UserUpdateSchema } from '@/lib/validator'
 
 const UserEditForm = ({ user }: { user: IUser }) => {
   const router = useRouter()
+  const [isRoleOpen, setIsRoleOpen] = useState(false)
 
   type UserUpdateInput = z.infer<typeof UserUpdateSchema>
   const form = useForm<UserUpdateInput>({
     resolver: zodResolver(UserUpdateSchema) as Resolver<UserUpdateInput>,
     defaultValues: { ...user, _id: user._id.toString() },
   })
+  const selectedRole = form.watch('role')?.toString()
 
   const { toast } = useToast()
   async function onSubmit(values: z.infer<typeof UserUpdateSchema>) {
@@ -69,9 +73,9 @@ const UserEditForm = ({ user }: { user: IUser }) => {
       <form
         method='post'
         onSubmit={form.handleSubmit(onSubmit)}
-        className='space-y-8'
+        className='space-y-6 w-full max-w-2xl'
       >
-        <div className='flex flex-col gap-5 md:flex-row'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
           <FormField
             control={form.control}
             name='name'
@@ -99,26 +103,66 @@ const UserEditForm = ({ user }: { user: IUser }) => {
             )}
           />
         </div>
-        <div>
+        <div
+          className={cn(
+            'w-full md:max-w-sm transition-[margin] duration-150',
+            isRoleOpen && 'mb-24'
+          )}
+        >
           <FormField
             control={form.control}
             name='role'
             render={({ field }) => (
-              <FormItem className='space-x-2 items-center'>
-                <FormLabel>Role</FormLabel>
+              <FormItem className='w-full space-y-2'>
+                <FormLabel className='flex items-center justify-between'>
+                  <span>Role</span>
+                  <span
+                    className={cn(
+                      'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
+                      selectedRole === 'Admin'
+                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    )}
+                  >
+                    {selectedRole}
+                  </span>
+                </FormLabel>
                 <Select
+                  open={isRoleOpen}
+                  onOpenChange={setIsRoleOpen}
                   onValueChange={field.onChange}
                   value={field.value.toString()}
                 >
                   <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger
+                      className='w-full bg-background'
+                    >
                       <SelectValue placeholder='Select a role' />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent
+                    position='popper'
+                    align='start'
+                    side='bottom'
+                    sideOffset={8}
+                    className='min-w-[var(--radix-select-trigger-width)]'
+                  >
                     {USER_ROLES.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {role}
+                      <SelectItem
+                        key={role}
+                        value={role}
+                        className='py-2'
+                      >
+                        <span
+                          className={cn(
+                            'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
+                            role === 'Admin'
+                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                          )}
+                        >
+                          {role}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -129,13 +173,18 @@ const UserEditForm = ({ user }: { user: IUser }) => {
             )}
           />
         </div>
-        <div className='flex-between'>
-          <Button type='submit' disabled={form.formState.isSubmitting}>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-start gap-3'>
+          <Button
+            type='submit'
+            disabled={form.formState.isSubmitting}
+            className='bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto'
+          >
             {form.formState.isSubmitting ? 'Submitting...' : `Update User `}
           </Button>
           <Button
             variant='outline'
             type='button'
+            className='w-full sm:w-auto'
             onClick={() => router.push(`/admin/users`)}
           >
             Back

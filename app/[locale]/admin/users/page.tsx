@@ -35,7 +35,7 @@ export default async function AdminUser(props: {
   return (
     <div className='space-y-2'>
       <h1 className='h1-bold'>Users</h1>
-      <div>
+      <div className='overflow-x-auto'>
         <Table>
           <TableHeader>
             <TableRow>
@@ -52,12 +52,24 @@ export default async function AdminUser(props: {
                 <TableCell>{formatId(user._id.toString())}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell className='flex gap-1'>
+                <TableCell>
+                  <span
+                    className={
+                      user.role === 'Admin'
+                        ? 'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                        : 'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    }
+                  >
+                    {user.role}
+                  </span>
+                </TableCell>
+                <TableCell className='min-w-[140px]'>
+                  <div className='flex gap-1'>
                   <Button asChild variant='outline' size='sm'>
                     <Link href={`/admin/users/${user._id}`}>Edit</Link>
                   </Button>
                   <DeleteDialog id={user._id.toString()} action={deleteUser} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

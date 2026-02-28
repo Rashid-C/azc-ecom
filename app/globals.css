@@ -148,6 +148,10 @@
     @apply p-3 hover:bg-muted hover:no-underline;
   }
 
+  .button {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 rounded-md font-medium;
+  }
+
   .h1-bold {
     @apply font-bold text-2xl lg:text-3xl
   }

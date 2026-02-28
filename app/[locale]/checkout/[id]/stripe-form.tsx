@@ -8,7 +8,6 @@ import { FormEvent, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import ProductPrice from '@/components/shared/product/product-price'
-import useSettingStore from '@/hooks/use-setting-store'
 
 export default function StripeForm({
   priceInCents,
@@ -17,27 +16,22 @@ export default function StripeForm({
   priceInCents: number
   orderId: string
 }) {
-  const {
-    setting: { site },
-  } = useSettingStore()
-
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string>()
-  const [email, setEmail] = useState<string>()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
 
-    if (stripe == null || elements == null || email == null) return
+    if (stripe == null || elements == null) return
 
     setIsLoading(true)
     stripe
       .confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${site.url}/checkout/${orderId}/stripe-payment-success`,
+          return_url: `${window.location.origin}/checkout/${orderId}/stripe-payment-success`,
         },
       })
       .then(({ error }) => {
@@ -56,10 +50,10 @@ export default function StripeForm({
       {errorMessage && <div className='text-destructive'>{errorMessage}</div>}
       <PaymentElement />
       <div>
-        <LinkAuthenticationElement onChange={(e) => setEmail(e.value.email)} />
+        <LinkAuthenticationElement />
       </div>
       <Button
-        className='w-full'
+        className='w-full rounded-full bg-emerald-600 hover:bg-emerald-700 text-white'
         size='lg'
         disabled={stripe == null || elements == null || isLoading}
       >

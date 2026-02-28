@@ -158,22 +158,27 @@ export default function OrderDetailsForm({
 
                         {!isPaid && ['Stripe', 'PayPal'].includes(paymentMethod) && (
                             <Link
-                                className={cn(buttonVariants(), 'w-full')}
+                                className={cn(
+                                    buttonVariants(),
+                                    'w-full rounded-full bg-amber-500 hover:bg-amber-600 text-black'
+                                )}
                                 href={`/checkout/${order._id.toString()}`}
                             >
                                 Pay Order
                             </Link>
                         )}
-                           {isAdmin && !isPaid && paymentMethod === 'Cash On Delivery' && (
+           {isAdmin && !isPaid && paymentMethod === 'Cash On Delivery' && (
               <ActionButton
                 caption='Mark as paid'
                 action={() => updateOrderToPaid(order._id.toString())}
+                className='w-full bg-blue-600 hover:bg-blue-700 text-white'
               />
             )}
             {isAdmin && isPaid && !isDelivered && (
               <ActionButton
                 caption='Mark as delivered'
                 action={() => deliverOrder(order._id.toString())}
+                className='w-full bg-emerald-600 hover:bg-emerald-700 text-white'
               />
             )}
                     </CardContent>

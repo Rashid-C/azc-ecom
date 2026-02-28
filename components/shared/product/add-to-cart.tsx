@@ -34,7 +34,7 @@ export default function AddToCart({
 
   return minimal ? (
     <Button
-      className='rounded-full w-auto'
+      className='rounded-full w-auto bg-emerald-600 hover:bg-emerald-700 text-white'
       onClick={() => {
         try {
           addItem(item, 1)
@@ -81,7 +81,7 @@ export default function AddToCart({
       </Select>
 
       <Button
-        className='rounded-full w-full'
+        className='rounded-full w-full bg-emerald-600 hover:bg-emerald-700 text-white'
         type='button'
         onClick={async () => {
           try {
@@ -98,7 +98,7 @@ export default function AddToCart({
         {t('Product.Add to Cart')}
       </Button>
       <Button
-        variant='secondary'
+        variant='default'
         onClick={() => {
           try {
             addItem(item, quantity)
@@ -110,7 +110,7 @@ export default function AddToCart({
             })
           }
         }}
-        className='w-full rounded-full '
+        className='w-full rounded-full bg-amber-500 hover:bg-amber-600 text-black'
       >
         {t('Product.Buy Now')}
       </Button>

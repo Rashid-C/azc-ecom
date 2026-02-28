@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 
 import Pagination from '@/components/shared/pagination'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -80,9 +81,11 @@ export default async function OrdersPage(props: {
                     : 'No'}
                 </TableCell>
                 <TableCell>
-                  <Link href={`/account/orders/${order._id!.toString()}`}>
-                    <span className='px-2'>Details</span>
-                  </Link>
+                  <Button asChild variant='outline' size='sm'>
+                    <Link href={`/account/orders/${order._id!.toString()}`}>
+                      View Order
+                    </Link>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
