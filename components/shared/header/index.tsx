@@ -36,15 +36,11 @@ export default async function Header() {
 
           {/* Product categories — centered, desktop only */}
           <nav className='hidden md:flex items-center justify-center gap-0.5 overflow-hidden'>
-            {categories.map((cat, i) => (
+            {categories.map((cat) => (
               <Link
                 key={cat}
                 href={`/search?category=${cat}`}
-                className={`px-3 py-1.5 text-sm font-medium whitespace-nowrap rounded-full transition-colors
-                  ${i === 0
-                    ? 'text-primary font-semibold underline underline-offset-4'
-                    : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  }`}
+                className='px-3 py-1.5 text-sm font-medium whitespace-nowrap rounded-full transition-colors text-gray-300 hover:text-white hover:bg-white/10'
               >
                 {cat}
               </Link>
