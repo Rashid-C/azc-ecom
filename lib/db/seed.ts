@@ -23,6 +23,15 @@ const main = async () => {
     const { users, products, reviews, webPages, settings } = data
     await connectToDatabase(process.env.MONGODB_URI)
 
+    // Safety check: abort if real products already exist in the database
+    const existingProductCount = await Product.countDocuments()
+    if (existingProductCount > 0) {
+      console.log(
+        `⚠️  Seed aborted: ${existingProductCount} products already exist in the database. Delete them manually via /admin/products before seeding.`
+      )
+      process.exit(0)
+    }
+
     await User.deleteMany()
     const createdUser = await User.insertMany(users)
 
