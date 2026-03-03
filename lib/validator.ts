@@ -10,6 +10,7 @@ const MongoId = z
 const Price = (field: string) =>
   z.coerce
     .number()
+    .min(0, `${field} must be 0 or more`)
     .refine(
       (value) => /^\d+(\.\d{2})?$/.test(formatNumberWithDecimal(value)),
       `${field} must have exactly two decimal places (e.g., 49.99)`

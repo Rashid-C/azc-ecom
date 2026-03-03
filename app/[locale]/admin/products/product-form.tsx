@@ -96,6 +96,12 @@ const ProductForm = ({
     if (cur) return [cur, ...brands.filter((b) => b !== cur)]
     return brands
   })
+  const [listPriceDisplay, setListPriceDisplay] = useState(
+    product?.listPrice ? String(product.listPrice) : ''
+  )
+  const [priceDisplay, setPriceDisplay] = useState(
+    product?.price ? String(product.price) : ''
+  )
 
   const form = useForm<IProductInput>({
     resolver: (
@@ -345,12 +351,21 @@ const ProductForm = ({
                 <FormLabel>List Price</FormLabel>
                 <FormControl>
                   <Input
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    placeholder='0.00'
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    type='text'
+                    placeholder='0'
+                    value={listPriceDisplay}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
+                      setListPriceDisplay(val)
+                    }}
+                    onBlur={() => {
+                      const num = parseFloat(listPriceDisplay)
+                      const final = isNaN(num) ? 0 : Math.max(0, num)
+                      setListPriceDisplay(final === 0 ? '' : String(final))
+                      field.onChange(final)
+                      field.onBlur()
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -365,12 +380,21 @@ const ProductForm = ({
                 <FormLabel>Net Price</FormLabel>
                 <FormControl>
                   <Input
-                    type='number'
-                    min='0'
-                    step='0.01'
-                    placeholder='0.00'
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    type='text'
+                    placeholder='0'
+                    value={priceDisplay}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
+                      setPriceDisplay(val)
+                    }}
+                    onBlur={() => {
+                      const num = parseFloat(priceDisplay)
+                      const final = isNaN(num) ? 0 : Math.max(0, num)
+                      setPriceDisplay(final === 0 ? '' : String(final))
+                      field.onChange(final)
+                      field.onBlur()
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
