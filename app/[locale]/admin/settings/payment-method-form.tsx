@@ -38,7 +38,7 @@ export default function PaymentMethodForm({
     formState: { errors },
   } = form
 
-  const availablePaymentMethods = watch('availablePaymentMethods')
+  const availablePaymentMethods = watch('availablePaymentMethods') ?? []
   const defaultPaymentMethod = watch('defaultPaymentMethod')
 
   useEffect(() => {

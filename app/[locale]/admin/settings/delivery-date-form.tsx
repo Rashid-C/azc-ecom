@@ -39,7 +39,7 @@ export default function DeliveryDateForm({
     formState: { errors },
   } = form
 
-  const availableDeliveryDates = watch('availableDeliveryDates')
+  const availableDeliveryDates = watch('availableDeliveryDates') ?? []
   const defaultDeliveryDate = watch('defaultDeliveryDate')
 
   useEffect(() => {

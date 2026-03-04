@@ -22,7 +22,30 @@ const SettingForm = ({ setting }: { setting: ISettingInput }) => {
 
   const form = useForm<ISettingInput>({
     resolver: zodResolver(SettingInputSchema) as Resolver<ISettingInput>,
-    defaultValues: setting,
+    defaultValues: {
+      ...setting,
+      site: {
+        name: setting?.site?.name ?? '',
+        url: setting?.site?.url ?? '',
+        logo: setting?.site?.logo ?? '',
+        slogan: setting?.site?.slogan ?? '',
+        description: setting?.site?.description ?? '',
+        keywords: setting?.site?.keywords ?? '',
+        email: setting?.site?.email ?? '',
+        phone: setting?.site?.phone ?? '',
+        author: setting?.site?.author ?? '',
+        copyright: setting?.site?.copyright ?? '',
+        address: setting?.site?.address ?? '',
+      },
+      defaultLanguage: setting?.defaultLanguage ?? '',
+      defaultCurrency: setting?.defaultCurrency ?? '',
+      defaultPaymentMethod: setting?.defaultPaymentMethod ?? '',
+      defaultDeliveryDate: setting?.defaultDeliveryDate ?? '',
+      availableLanguages: setting?.availableLanguages ?? [],
+      availableCurrencies: setting?.availableCurrencies ?? [],
+      availablePaymentMethods: setting?.availablePaymentMethods ?? [],
+      availableDeliveryDates: setting?.availableDeliveryDates ?? [],
+    },
   })
   const {
     formState: { isSubmitting },

@@ -38,7 +38,7 @@ export default function LanguageForm({
     formState: { errors },
   } = form
 
-  const availableLanguages = watch('availableLanguages')
+  const availableLanguages = watch('availableLanguages') ?? []
   const defaultLanguage = watch('defaultLanguage')
 
   useEffect(() => {

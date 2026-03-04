@@ -38,7 +38,7 @@ export default function CurrencyForm({
     formState: { errors },
   } = form
 
-  const availableCurrencies = watch('availableCurrencies')
+  const availableCurrencies = watch('availableCurrencies') ?? []
   const defaultCurrency = watch('defaultCurrency')
 
   useEffect(() => {
