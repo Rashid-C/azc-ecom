@@ -164,14 +164,14 @@ export default async function SearchPage(props: {
         </div>
       </div>
       {/* ── Category circle strip — desktop only ── */}
-      <div className='hidden md:flex items-center gap-4 my-3 rounded-2xl px-6 py-3 overflow-x-auto scrollbar-hide backdrop-blur-md bg-white/60 dark:bg-gray-900/40 border border-white/70 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.07)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)]'>
+      <div className='hidden md:flex items-center  gap-2 my-3 rounded-2xl px-6 py-3 overflow-x-auto scrollbar-hide backdrop-blur-md bg-white/60 dark:bg-gray-900/40 border border-white/70 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.07)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)]'>
 
         {/* All */}
         <Link
           href={getFilterUrl({ category: 'all', params })}
-          className='flex flex-col items-center gap-1.5 group shrink-0 w-16'
+          className='flex flex-col gap-1.5 group shrink-0 w-16'
         >
-          <div className='relative pb-1'>
+          <div className='relative pb-1 mx-auto'>
             <div
               className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-105
                 ${
@@ -209,9 +209,9 @@ export default async function SearchPage(props: {
             <Link
               key={c.name}
               href={getFilterUrl({ category: c.name, params })}
-              className='flex flex-col items-center gap-1.5 group shrink-0 w-16'
+              className='flex flex-col gap-1.5 group shrink-0 w-24'
             >
-              <div className='relative pb-1'>
+              <div className='relative pb-1 mx-auto'>
                 {/* glow ring for active */}
                 {isActive && (
                   <span className='absolute inset-0 rounded-full animate-pulse bg-gray-900/10 dark:bg-white/10 scale-[1.18]' />
@@ -239,7 +239,7 @@ export default async function SearchPage(props: {
                 )}
               </div>
               <span
-                className={`text-[10px] text-center leading-tight font-semibold tracking-wide transition-all duration-300 line-clamp-1
+                className={`text-[10px] text-center leading-snug font-semibold tracking-wide transition-all duration-300 w-full whitespace-normal wrap-break-word
                   ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-200 group-hover:scale-105'}`}
               >
                 {c.name}
