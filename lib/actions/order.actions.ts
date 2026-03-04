@@ -394,7 +394,11 @@ export async function confirmStripeOrderPayment(
     await order.save()
     if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
       await applyStockAdjustmentIfNeeded(order._id.toString())
-    if (order.user.email) await sendPurchaseReceipt({ order })
+    try {
+      if (order.user.email) await sendPurchaseReceipt({ order })
+    } catch (emailErr) {
+      console.error('sendPurchaseReceipt error (non-fatal):', emailErr)
+    }
     revalidatePath(`/account/orders/${orderId}`)
 
     return { success: true, message: 'Order paid successfully' }
