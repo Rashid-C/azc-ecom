@@ -29,7 +29,7 @@ import { calculatePastDate, formatDateTime, formatNumber } from '@/lib/utils'
 
 import SalesCategoryPieChart from './sales-category-pie-chart'
 
-import { useEffect, useState, useTransition } from 'react'
+import React, { useEffect, useState, useTransition } from 'react'
 import { DateRange } from 'react-day-picker'
 import { getOrderSummary } from '@/lib/actions/order.actions'
 import SalesAreaChart from './sales-area-chart'
@@ -121,7 +121,7 @@ export default function OverviewReport() {
       </div>
     )
 
-  const statValues: Record<string, string | number | JSX.Element> = {
+  const statValues: Record<string, string | number | React.ReactElement> = {
     revenue: <ProductPrice price={data.totalSales} plain />,
     sales: formatNumber(data.ordersCount),
     customers: data.usersCount,
