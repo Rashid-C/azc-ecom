@@ -4,7 +4,13 @@ import { redirect } from 'next/navigation'
 
 import { auth } from '@/auth'
 import SeparatorWithOr from '@/components/shared/separator-or'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 import CredentialsSignInForm from './credentials-signin-form'
 import { GoogleSignInForm } from './google-signin-form'
@@ -31,28 +37,38 @@ export default async function SignInPage(props: {
   }
 
   return (
-    <div className='w-full'>
-      <Card>
-        <CardHeader>
-          <CardTitle className='text-2xl'>Sign In</CardTitle>
+    <div className='w-full space-y-4'>
+      <Card className='shadow-md border-border/60'>
+        <CardHeader className='space-y-1 pb-4'>
+          <CardTitle className='text-2xl font-bold tracking-tight'>
+            Sign in
+          </CardTitle>
+          <CardDescription>
+            Welcome back — sign in to your {site.name} account
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div>
-            <CredentialsSignInForm />
-            <SeparatorWithOr />
-            <div className='mt-4'>
-              <GoogleSignInForm />
-            </div>
-          </div>
+        <CardContent className='space-y-4'>
+          <GoogleSignInForm />
+          <SeparatorWithOr />
+          <CredentialsSignInForm />
         </CardContent>
       </Card>
-      <SeparatorWithOr>New to {site.name}?</SeparatorWithOr>
 
-      <Link href={`/sign-up?callbackUrl=${encodeURIComponent(callbackUrl)}`}>
-        <Button className='w-full' variant='outline'>
-          Create your {site.name} account
-        </Button>
-      </Link>
+      <Card className='shadow-sm border-border/60'>
+        <CardContent className='py-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between'>
+          <p className='text-sm text-muted-foreground'>
+            New to {site.name}?
+          </p>
+          <Link
+            href={`/sign-up?callbackUrl=${encodeURIComponent(callbackUrl)}`}
+            className='w-full sm:w-auto'
+          >
+            <Button className='w-full sm:w-auto' variant='outline'>
+              Create an account
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   )
 }

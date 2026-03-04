@@ -490,7 +490,7 @@ const ProductForm = ({
                             })
                           }}
                           appearance={{
-                            button: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold rounded-full px-5 py-2 shadow transition-colors',
+                            button: 'bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full px-5 py-2 shadow transition-colors',
                             allowedContent: 'text-amber-600 dark:text-amber-400 font-medium bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full',
                           }}
                         />
@@ -550,7 +550,7 @@ const ProductForm = ({
             type='submit'
             size='lg'
             disabled={form.formState.isSubmitting}
-            className='col-span-2 w-full bg-blue-600 hover:bg-blue-700 text-white'
+            className='col-span-2 w-full'
           >
             {form.formState.isSubmitting ? 'Submitting...' : `${type} Product `}
           </Button>

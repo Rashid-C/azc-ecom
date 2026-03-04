@@ -176,7 +176,7 @@ const UserEditForm = ({ user }: { user: IUser }) => {
           <Button
             type='submit'
             disabled={form.formState.isSubmitting}
-            className='bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto'
+            className='w-full sm:w-auto'
           >
             {form.formState.isSubmitting ? 'Submitting...' : `Update User `}
           </Button>

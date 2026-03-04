@@ -129,6 +129,17 @@ export async function getAllProductsForAdmin({
   }
 }
 
+// GET ALL PRODUCTS FOR EXPORT (no pagination limit)
+export async function getAllProductsForExport() {
+  await requireAdmin()
+  await connectToDatabase()
+  const products = await Product.find({})
+    .sort({ _id: -1 })
+    .select('_id name price listPrice description countInStock isPublished updatedAt')
+    .lean()
+  return JSON.parse(JSON.stringify(products)) as IProduct[]
+}
+
 export async function renameCategory(oldName: string, newName: string) {
   await requireAdmin()
   await connectToDatabase()

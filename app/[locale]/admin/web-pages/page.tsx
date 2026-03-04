@@ -27,11 +27,7 @@ export default async function WebPageAdminPage() {
     <div className='space-y-2'>
       <div className='flex-between'>
         <h1 className='h1-bold'>Web Pages</h1>
-        <Button
-          asChild
-          variant='default'
-          className='bg-blue-600 hover:bg-blue-700 text-white'
-        >
+        <Button asChild>
           <Link href='/admin/web-pages/create'>Create WebPage</Link>
         </Button>
       </div>

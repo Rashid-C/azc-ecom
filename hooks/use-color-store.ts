@@ -38,7 +38,7 @@ const availableColors = [
       '--border': '20 5.9% 90%',
       '--input': '20 5.9% 90%',
       '--ring': '20 14.3% 4.1%',
-      '--radius': 'rem',
+      '--radius': '0.5rem',
       '--chart-1': '12 76% 61%',
       '--chart-2': '173 58% 39%',
       '--chart-3': '197 37% 24%',
@@ -229,7 +229,10 @@ export default function useColorStore(theme: string = 'light') {
       const colors: { [key: string]: string } =
         theme === 'light' ? color.root : color.dark
       for (const key in colors) {
-        document.documentElement.style.setProperty(key, colors[key])
+        const value = colors[key]
+        // radius values are not colors — set them as-is; everything else is an HSL color
+        const cssValue = key.includes('radius') ? value : `hsl(${value})`
+        document.documentElement.style.setProperty(key, cssValue)
       }
     },
   }

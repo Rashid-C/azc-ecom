@@ -14,6 +14,7 @@ import { OrderItem } from '@/types'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { ShoppingCart, Zap } from 'lucide-react'
 
 export default function AddToCart({
   item,
@@ -33,7 +34,8 @@ export default function AddToCart({
 
   return minimal ? (
     <Button
-      className='rounded-full w-auto bg-emerald-600 hover:bg-emerald-700 text-white'
+      size='sm'
+      className='rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5'
       onClick={() => {
         try {
           addItem(item, 1)
@@ -57,6 +59,7 @@ export default function AddToCart({
         }
       }}
     >
+      <ShoppingCart className='h-4 w-4' />
       {t('Product.Add to Cart')}
     </Button>
   ) : (
@@ -65,7 +68,7 @@ export default function AddToCart({
         value={quantity.toString()}
         onValueChange={(i) => setQuantity(Number(i))}
       >
-        <SelectTrigger className=''>
+        <SelectTrigger>
           <SelectValue>
             {t('Product.Quantity')}: {quantity}
           </SelectValue>
@@ -80,7 +83,8 @@ export default function AddToCart({
       </Select>
 
       <Button
-        className='rounded-full w-full bg-emerald-600 hover:bg-emerald-700 text-white'
+        size='lg'
+        className='rounded-full w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-2'
         type='button'
         onClick={async () => {
           try {
@@ -94,10 +98,12 @@ export default function AddToCart({
           }
         }}
       >
+        <ShoppingCart className='h-5 w-5' />
         {t('Product.Add to Cart')}
       </Button>
+
       <Button
-        variant='default'
+        size='lg'
         onClick={() => {
           try {
             addItem(item, quantity)
@@ -109,8 +115,9 @@ export default function AddToCart({
             })
           }
         }}
-        className='w-full rounded-full bg-amber-500 hover:bg-amber-600 text-black'
+        className='w-full rounded-full bg-amber-500 hover:bg-amber-600 text-black font-semibold gap-2'
       >
+        <Zap className='h-5 w-5' />
         {t('Product.Buy Now')}
       </Button>
     </div>

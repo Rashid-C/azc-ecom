@@ -1,6 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   FormControl,
   FormField,
@@ -10,11 +16,11 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Separator } from '@/components/ui/separator'
 import { toast } from '@/hooks/use-toast'
 import { UploadButton } from '@/lib/uploadthing'
 import { ISettingInput } from '@/types'
-import { TrashIcon } from 'lucide-react'
-import React from 'react'
+import { Camera, ImageIcon, Trash2 } from 'lucide-react'
 import { UseFormReturn } from 'react-hook-form'
 
 export default function SiteInfoForm({
@@ -25,150 +31,188 @@ export default function SiteInfoForm({
   id: string
 }) {
   const { watch, control } = form
-
   const siteLogo = watch('site.logo')
+
   return (
     <Card id={id}>
       <CardHeader>
-        <CardTitle>Site Info</CardTitle>
+        <CardTitle className='flex items-center gap-2'>
+          <ImageIcon className='h-4 w-4 text-primary' />
+          Site Info
+        </CardTitle>
+        <CardDescription>
+          Configure your site&apos;s name, logo, and contact details
+        </CardDescription>
       </CardHeader>
-      <CardContent className='space-y-4'>
-        <div className='flex flex-col gap-5 md:flex-row'>
-          <FormField
-            control={control}
-            name='site.name'
-            render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter site name' {...field} />
-                </FormControl>
+      <CardContent className='space-y-6'>
 
-                <FormMessage />
-              </FormItem>
+        {/* Logo + Name row */}
+        <div className='flex flex-col sm:flex-row gap-6 items-start'>
+          {/* Clickable logo upload */}
+          <div className='flex flex-col items-center gap-2 shrink-0'>
+            <span className='text-sm font-medium text-muted-foreground'>Logo</span>
+            <div className='relative group cursor-pointer'>
+              {/* Visual area */}
+              <div className='w-24 h-24 rounded-2xl border-2 border-dashed border-primary/40 bg-muted/30 flex items-center justify-center overflow-hidden transition-colors group-hover:border-primary group-hover:bg-muted/50'>
+                {siteLogo ? (
+                  <img
+                    src={siteLogo}
+                    alt='site logo'
+                    className='object-contain w-full h-full p-2'
+                  />
+                ) : (
+                  <div className='flex flex-col items-center gap-1.5 text-muted-foreground'>
+                    <Camera className='h-7 w-7' />
+                    <span className='text-[10px] font-medium uppercase tracking-wide'>
+                      Upload
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Hover overlay when logo exists */}
+              {siteLogo && (
+                <div className='absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none'>
+                  <Camera className='h-6 w-6 text-white' />
+                </div>
+              )}
+
+              {/* Invisible UploadButton covering the whole area */}
+              <div className='absolute inset-0'>
+                <UploadButton
+                  endpoint='imageUploader'
+                  onClientUploadComplete={(res) => {
+                    form.setValue('site.logo', res[0].url)
+                    toast({ description: 'Logo uploaded successfully' })
+                  }}
+                  onUploadError={(error: Error) => {
+                    toast({
+                      variant: 'destructive',
+                      description: `Upload failed: ${error.message}`,
+                    })
+                  }}
+                  appearance={{
+                    button:
+                      'absolute inset-0 w-24 h-24 opacity-0 cursor-pointer m-0 p-0 rounded-2xl',
+                    allowedContent: 'hidden',
+                    container: 'absolute inset-0 w-24 h-24',
+                  }}
+                />
+              </div>
+            </div>
+
+            {siteLogo && (
+              <Button
+                type='button'
+                variant='ghost'
+                size='sm'
+                className='gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 text-xs h-7 px-2'
+                onClick={() => form.setValue('site.logo', '')}
+              >
+                <Trash2 className='h-3 w-3' />
+                Remove
+              </Button>
             )}
-          />
+            <p className='text-[10px] text-muted-foreground/70 text-center'>
+              {siteLogo ? 'Click to change' : 'Click to upload'}
+            </p>
+          </div>
 
-          <FormField
-            control={control}
-            name='site.url'
-            render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Url</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter url' {...field} />
-                </FormControl>
-
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className='flex flex-col gap-5 md:flex-row'>
-          <div className='w-full text-left'>
+          {/* Name + URL */}
+          <div className='flex flex-col gap-4 flex-1 w-full'>
             <FormField
               control={control}
-              name='site.logo'
+              name='site.name'
               render={({ field }) => (
-                <FormItem className='w-full'>
-                  <FormLabel>Logo</FormLabel>
+                <FormItem>
+                  <FormLabel>Site Name</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter image url' {...field} />
+                    <Input placeholder='Enter site name' {...field} />
                   </FormControl>
-
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            {siteLogo && (
-              <div className='flex my-2 items-center gap-2'>
-                <img src={siteLogo} alt='logo' width={48} height={48} />
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => form.setValue('site.logo', '')}
-                >
-                  <TrashIcon className='w-4 h-4' />
-                </Button>
-              </div>
-            )}
-            {!siteLogo && (
-              <UploadButton
-                className='!items-start py-2'
-                endpoint='imageUploader'
-                onClientUploadComplete={(res) => {
-                  form.setValue('site.logo', res[0].url)
-                }}
-                onUploadError={(error: Error) => {
-                  toast({
-                    variant: 'destructive',
-                    description: `ERROR! ${error.message}`,
-                  })
-                }}
-              />
-            )}
+            <FormField
+              control={control}
+              name='site.url'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Site URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder='https://example.com' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
+        </div>
+
+        <Separator />
+
+        {/* Description + Slogan */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={control}
             name='site.description'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder='Enter description'
-                    className='h-40'
+                    placeholder='Enter site description'
+                    className='min-h-24 resize-none'
                     {...field}
                   />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
           />
+          <div className='space-y-4'>
+            <FormField
+              control={control}
+              name='site.slogan'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slogan</FormLabel>
+                  <FormControl>
+                    <Input placeholder='Enter site slogan' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name='site.keywords'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Keywords</FormLabel>
+                  <FormControl>
+                    <Input placeholder='keyword1, keyword2' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
-        <div className='flex flex-col gap-5 md:flex-row'>
-          <FormField
-            control={control}
-            name='site.slogan'
-            render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Slogan</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter slogan name' {...field} />
-                </FormControl>
 
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name='site.keywords'
-            render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Keywords</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter keywords' {...field} />
-                </FormControl>
+        <Separator />
 
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        <div className='flex flex-col gap-5 md:flex-row'>
+        {/* Contact */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={control}
             name='site.phone'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter phone number' {...field} />
+                  <Input placeholder='+971 xx xxx xxxx' {...field} />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
@@ -177,28 +221,28 @@ export default function SiteInfoForm({
             control={control}
             name='site.email'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter email address' {...field} />
+                  <Input
+                    type='email'
+                    placeholder='contact@example.com'
+                    {...field}
+                  />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
-        <div className='flex flex-col gap-5 md:flex-row'>
           <FormField
             control={control}
             name='site.address'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter address' {...field} />
+                  <Input placeholder='Enter physical address' {...field} />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
@@ -207,12 +251,14 @@ export default function SiteInfoForm({
             control={control}
             name='site.copyright'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Copyright</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter copyright' {...field} />
+                  <Input
+                    placeholder='© 2025 Your Company'
+                    {...field}
+                  />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}

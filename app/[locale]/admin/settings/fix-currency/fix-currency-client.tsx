@@ -35,7 +35,6 @@ export default function FixCurrencyClient() {
       <Button
         onClick={handleFix}
         disabled={loading}
-        className='bg-blue-600 hover:bg-blue-700 text-white'
       >
         {loading ? 'Applying...' : 'Apply — Set AED as Base Currency'}
       </Button>

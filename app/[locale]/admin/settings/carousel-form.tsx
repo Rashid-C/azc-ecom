@@ -1,7 +1,13 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import {
   FormControl,
   FormField,
@@ -13,7 +19,7 @@ import { Input } from '@/components/ui/input'
 import { toast } from '@/hooks/use-toast'
 import { useUploadThing } from '@/lib/uploadthing'
 import { ISettingInput } from '@/types'
-import { TrashIcon, UploadIcon } from 'lucide-react'
+import { Trash2 as TrashIcon, UploadIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useRef, useState } from 'react'
 import { useFieldArray, UseFormReturn } from 'react-hook-form'
@@ -117,7 +123,12 @@ export default function CarouselForm({
   return (
     <Card id={id}>
       <CardHeader>
-        <CardTitle>Carousels</CardTitle>
+        <CardTitle className='flex items-center gap-2'>
+          Carousels
+        </CardTitle>
+        <CardDescription>
+          Manage homepage banner slides with title, link, caption, and image
+        </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='space-y-4'>
@@ -184,13 +195,14 @@ export default function CarouselForm({
                 />
                 <CarouselImageUploader index={index} form={form} />
               </div>
-              <div>
-                {index == 0 && <div>Action</div>}
+              <div className='flex flex-col justify-end'>
+                {index == 0 && <div className='text-xs font-medium text-muted-foreground mb-2'>Action</div>}
                 <Button
                   type='button'
                   disabled={fields.length === 1}
-                  variant='outline'
-                  className={index == 0 ? 'mt-2' : ''}
+                  variant='ghost'
+                  size='icon'
+                  className='text-destructive hover:text-destructive hover:bg-destructive/10'
                   onClick={() => remove(index)}
                 >
                   <TrashIcon className='w-4 h-4' />

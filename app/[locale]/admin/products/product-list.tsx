@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input'
 import { formatDateTime, formatId } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ProductPrice from '@/components/shared/product/product-price'
+import ProductPdfExport from './product-pdf-export'
 
 type ProductListDataProps = {
   products: IProduct[]
@@ -38,11 +39,7 @@ const ProductList = () => {
 
   const handlePageChange = (changeType: 'next' | 'prev') => {
     const newPage = changeType === 'next' ? page + 1 : page - 1
-    if (changeType === 'next') {
-      setPage(newPage)
-    } else {
-      setPage(newPage)
-    }
+    setPage(newPage)
     startTransition(async () => {
       const data = await getAllProductsForAdmin({
         query: inputValue,
@@ -70,6 +67,7 @@ const ProductList = () => {
       })
     }
   }
+
   useEffect(() => {
     startTransition(async () => {
       const data = await getAllProductsForAdmin({ query: '' })
@@ -81,17 +79,16 @@ const ProductList = () => {
     <div>
       <div className='space-y-2'>
         <div className='flex-between flex-wrap gap-2'>
-          <div className='flex flex-wrap items-center gap-2 '>
+          <div className='flex flex-wrap items-center gap-2'>
             <h1 className='font-bold text-lg'>Products</h1>
-            <div className='flex flex-wrap items-center  gap-2 '>
+            <div className='flex flex-wrap items-center gap-2'>
               <Input
                 className='w-auto'
-                type='text '
+                type='text'
                 value={inputValue}
                 onChange={handleInputChange}
                 placeholder='Filter name...'
               />
-
               {isPending ? (
                 <p>Loading...</p>
               ) : (
@@ -105,18 +102,18 @@ const ProductList = () => {
             </div>
           </div>
 
-          <Button
-            asChild
-            variant='default'
-            className='bg-blue-600 hover:bg-blue-700 text-white'
-          >
-            <Link href='/admin/products/create'>Create Product</Link>
-          </Button>
+          <div className='flex items-center gap-2'>
+            <ProductPdfExport />
+            <Button asChild>
+              <Link href='/admin/products/create'>Create Product</Link>
+            </Button>
+          </div>
         </div>
         <div className='overflow-x-auto'>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className='w-10 text-center'>No:</TableHead>
                 <TableHead>Id</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead className='text-right'>Price</TableHead>
@@ -129,8 +126,11 @@ const ProductList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.products.map((product: IProduct) => (
+              {data?.products.map((product: IProduct, index: number) => (
                 <TableRow key={product._id.toString()}>
+                  <TableCell className='text-center text-muted-foreground text-sm font-medium'>
+                    {(data.from ?? 1) + index}
+                  </TableCell>
                   <TableCell>{formatId(product._id.toString())}</TableCell>
                   <TableCell>
                     <Link href={`/admin/products/${product._id}`}>
@@ -174,7 +174,7 @@ const ProductList = () => {
             </TableBody>
           </Table>
           {(data?.totalPages ?? 0) > 1 && (
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 mt-2'>
               <Button
                 variant='outline'
                 onClick={() => handlePageChange('prev')}

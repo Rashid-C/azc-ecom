@@ -45,7 +45,7 @@ export default function CredentialsSignInForm() {
     defaultValues: signInDefaultValues,
   })
 
-  const { control, handleSubmit } = form
+  const { control, handleSubmit, formState } = form
 
   const onSubmit = async (data: IUserSignIn) => {
     try {
@@ -70,15 +70,20 @@ export default function CredentialsSignInForm() {
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type='hidden' name='callbackUrl' value={callbackUrl} />
-        <div className='space-y-6'>
+        <div className='space-y-4'>
           <FormField
             control={control}
             name='email'
             render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Email</FormLabel>
+              <FormItem>
+                <FormLabel>Email address</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter email address' {...field} />
+                  <Input
+                    type='email'
+                    placeholder='you@example.com'
+                    autoComplete='email'
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -89,12 +94,13 @@ export default function CredentialsSignInForm() {
             control={control}
             name='password'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
                     type='password'
-                    placeholder='Enter password'
+                    placeholder='Enter your password'
+                    autoComplete='current-password'
                     {...field}
                   />
                 </FormControl>
@@ -103,14 +109,25 @@ export default function CredentialsSignInForm() {
             )}
           />
 
-          <div>
-            <Button type='submit'>Sign In</Button>
-          </div>
-          <div className='text-sm'>
+          <Button
+            type='submit'
+            className='w-full'
+            disabled={formState.isSubmitting}
+          >
+            {formState.isSubmitting ? 'Signing in...' : 'Sign in'}
+          </Button>
+
+          <p className='text-xs text-muted-foreground leading-relaxed'>
             By signing in, you agree to {site.name}&apos;s{' '}
-            <Link href='/page/conditions-of-use'>Conditions of Use</Link> and{' '}
-            <Link href='/page/privacy-policy'>Privacy Notice.</Link>
-          </div>
+            <Link href='/page/conditions-of-use' className='underline hover:text-foreground transition-colors'>
+              Conditions of Use
+            </Link>{' '}
+            and{' '}
+            <Link href='/page/privacy-policy' className='underline hover:text-foreground transition-colors'>
+              Privacy Notice
+            </Link>
+            .
+          </p>
         </div>
       </form>
     </Form>

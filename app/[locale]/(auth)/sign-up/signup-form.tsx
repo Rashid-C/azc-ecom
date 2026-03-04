@@ -49,7 +49,7 @@ export default function CredentialsSignInForm() {
     defaultValues: signUpDefaultValues,
   })
 
-  const { control, handleSubmit } = form
+  const { control, handleSubmit, formState } = form
 
   const onSubmit = async (data: IUserSignUp) => {
     try {
@@ -83,15 +83,19 @@ export default function CredentialsSignInForm() {
     <Form {...form}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <input type='hidden' name='callbackUrl' value={callbackUrl} />
-        <div className='space-y-6'>
+        <div className='space-y-4'>
           <FormField
             control={control}
             name='name'
             render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Name</FormLabel>
+              <FormItem>
+                <FormLabel>Full name</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter name address' {...field} />
+                  <Input
+                    placeholder='Enter your full name'
+                    autoComplete='name'
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -102,10 +106,15 @@ export default function CredentialsSignInForm() {
             control={control}
             name='email'
             render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Email</FormLabel>
+              <FormItem>
+                <FormLabel>Email address</FormLabel>
                 <FormControl>
-                  <Input placeholder='Enter email address' {...field} />
+                  <Input
+                    type='email'
+                    placeholder='you@example.com'
+                    autoComplete='email'
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -116,12 +125,13 @@ export default function CredentialsSignInForm() {
             control={control}
             name='password'
             render={({ field }) => (
-              <FormItem className='w-full'>
+              <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
                   <Input
                     type='password'
-                    placeholder='Enter password'
+                    placeholder='Create a password'
+                    autoComplete='new-password'
                     {...field}
                   />
                 </FormControl>
@@ -129,16 +139,18 @@ export default function CredentialsSignInForm() {
               </FormItem>
             )}
           />
+
           <FormField
             control={control}
             name='confirmPassword'
             render={({ field }) => (
-              <FormItem className='w-full'>
-                <FormLabel>Confirm Password</FormLabel>
+              <FormItem>
+                <FormLabel>Confirm password</FormLabel>
                 <FormControl>
                   <Input
                     type='password'
-                    placeholder='Confirm Password'
+                    placeholder='Re-enter your password'
+                    autoComplete='new-password'
                     {...field}
                   />
                 </FormControl>
@@ -146,21 +158,38 @@ export default function CredentialsSignInForm() {
               </FormItem>
             )}
           />
-          <div>
-            <Button type='submit'>Sign Up</Button>
-          </div>
-          <div className='text-sm'>
+
+          <Button
+            type='submit'
+            className='w-full'
+            disabled={formState.isSubmitting}
+          >
+            {formState.isSubmitting ? 'Creating account...' : 'Create account'}
+          </Button>
+
+          <p className='text-xs text-muted-foreground leading-relaxed'>
             By creating an account, you agree to {site.name}&apos;s{' '}
-            <Link href='/page/conditions-of-use'>Conditions of Use</Link> and{' '}
-            <Link href='/page/privacy-policy'> Privacy Notice. </Link>
-          </div>
-          <Separator className='mb-4' />
-          <div className='text-sm'>
-            Already have an account?{' '}
-            <Link className='link' href={`/sign-in?callbackUrl=${callbackUrl}`}>
-              Sign In
+            <Link href='/page/conditions-of-use' className='underline hover:text-foreground transition-colors'>
+              Conditions of Use
+            </Link>{' '}
+            and{' '}
+            <Link href='/page/privacy-policy' className='underline hover:text-foreground transition-colors'>
+              Privacy Notice
             </Link>
-          </div>
+            .
+          </p>
+
+          <Separator />
+
+          <p className='text-sm text-center text-muted-foreground'>
+            Already have an account?{' '}
+            <Link
+              className='font-medium text-foreground underline-offset-4 hover:underline'
+              href={`/sign-in?callbackUrl=${callbackUrl}`}
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       </form>
     </Form>
