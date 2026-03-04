@@ -120,6 +120,17 @@ export async function getAllProductsForAdmin({
   }
 }
 
+export async function renameCategory(oldName: string, newName: string) {
+  await connectToDatabase()
+  const result = await Product.updateMany(
+    { category: oldName },
+    { $set: { category: newName } }
+  )
+  revalidatePath('/search')
+  revalidatePath('/admin/products')
+  return { modifiedCount: result.modifiedCount }
+}
+
 export async function getAllCategories() {
   await connectToDatabase()
   const categories = await Product.find({ isPublished: true }).distinct(
