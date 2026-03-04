@@ -4,11 +4,13 @@ import data from '../data'
 import Setting from '../db/models/setting.model'
 import { connectToDatabase } from '../db'
 import { formatError } from '../utils'
+import { requireAdmin } from '../auth-guard'
 
 const globalForSettings = global as unknown as {
   cachedSettings: ISettingInput | null
 }
 export const getNoCachedSetting = async (): Promise<ISettingInput> => {
+  await requireAdmin()
   await connectToDatabase()
   // Use getSetting so the auto-migration runs if needed
   globalForSettings.cachedSettings = null
@@ -52,6 +54,7 @@ export const getSetting = async (): Promise<ISettingInput> => {
 
 export const updateSetting = async (newSetting: ISettingInput) => {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const aedCurrency =
       newSetting.availableCurrencies.find((c) => c.code === 'AED') || {
@@ -84,6 +87,7 @@ export const updateSetting = async (newSetting: ISettingInput) => {
 // Normalize all currency convert rates so AED = 1 (base currency)
 export const fixCurrencyBaseToAED = async () => {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const setting = await Setting.findOne().lean()
     if (!setting) return { success: false, message: 'No settings found in database' }

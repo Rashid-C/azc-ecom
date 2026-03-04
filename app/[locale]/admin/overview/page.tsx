@@ -1,14 +1,12 @@
 import { Metadata } from 'next'
 
 import OverviewReport from './overview-report'
-import { auth } from '@/auth'
+import { requireAdmin } from '@/lib/auth-guard'
 export const metadata: Metadata = {
   title: 'Admin Dashboard',
 }
 const DashboardPage = async () => {
-  const session = await auth()
-  if (session?.user.role !== 'Admin')
-    throw new Error('Admin permission required')
+  await requireAdmin()
 
   return <OverviewReport />
 }

@@ -4,6 +4,7 @@ import { getProductById, getAllCategoriesForAdmin, getAllBrandsForAdmin } from '
 import Link from 'next/link'
 import ProductForm from '../product-form'
 import { Metadata } from 'next'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Edit Product',
@@ -16,6 +17,7 @@ type UpdateProductProps = {
 }
 
 const UpdateProduct = async (props: UpdateProductProps) => {
+  await requireAdmin()
   const params = await props.params
 
   const { id } = params

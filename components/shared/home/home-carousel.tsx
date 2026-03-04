@@ -11,7 +11,6 @@ import {
 import { cn } from '@/lib/utils'
 import { ICarousel } from '@/types'
 import Autoplay from 'embla-carousel-autoplay'
-import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import Link from 'next/link'
 import * as React from 'react'
@@ -21,7 +20,6 @@ export function HomeCarousel({ items }: { items: ICarousel[] }) {
     Autoplay({ delay: 3000, stopOnInteraction: true })
   )
 
-  const t = useTranslations('Home')
   return (
     <Carousel
       dir='ltr'
@@ -30,8 +28,8 @@ export function HomeCarousel({ items }: { items: ICarousel[] }) {
       className='w-full mx-auto'
     >
       <CarouselContent>
-        {items.map((item) => (
-          <CarouselItem key={item.title}>
+        {items.filter((item) => item.image?.startsWith('http') || item.image?.startsWith('/')).map((item, index) => (
+          <CarouselItem key={index}>
             <Link href={item.url}>
               <div className='flex aspect-[16/6] items-center justify-center p-6 relative -m-1'>
                 <Image
@@ -47,10 +45,10 @@ export function HomeCarousel({ items }: { items: ICarousel[] }) {
                       'text-xl md:text-6xl font-bold mb-4 text-yellow-400 drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]'
                     )}
                   >
-                    {t(`${item.title}`)}
+                    {item.title}
                   </h2>
                   <Button className='hidden md:block bg-yellow-400 text-black hover:bg-yellow-300 border-none'>
-                    {t(`${item.buttonCaption}`)}
+                    {item.buttonCaption}
                   </Button>
                 </div>
               </div>

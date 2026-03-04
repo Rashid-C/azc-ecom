@@ -1,12 +1,14 @@
 import { Metadata } from 'next'
 import { getAllCategoriesForAdmin } from '@/lib/actions/product.actions'
 import CategoryList from './category-list'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Manage Categories',
 }
 
 export default async function CategoriesPage() {
+  await requireAdmin()
   const categories = await getAllCategoriesForAdmin()
 
   return (

@@ -1,5 +1,7 @@
 'use server'
 
+const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 import { connectToDatabase } from '@/lib/db'
 import Product, { IProduct } from '@/lib/db/models/product.model'
 import { revalidatePath } from 'next/cache'
@@ -8,10 +10,12 @@ import { ProductInputSchema, ProductUpdateSchema } from '../validator'
 import { IProductInput } from '@/types'
 import { z } from 'zod'
 import { getSetting } from './setting.actions'
+import { requireAdmin } from '../auth-guard'
 
 // CREATE
 export async function createProduct(data: IProductInput) {
   try {
+    await requireAdmin()
     const product = ProductInputSchema.parse(data)
     await connectToDatabase()
     await Product.create(product)
@@ -28,6 +32,7 @@ export async function createProduct(data: IProductInput) {
 // UPDATE
 export async function updateProduct(data: z.infer<typeof ProductUpdateSchema>) {
   try {
+    await requireAdmin()
     const product = ProductUpdateSchema.parse(data)
     await connectToDatabase()
     await Product.findByIdAndUpdate(product._id, { $set: product })
@@ -45,6 +50,7 @@ export async function updateProduct(data: z.infer<typeof ProductUpdateSchema>) {
 // DELETE
 export async function deleteProduct(id: string) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const res = await Product.findByIdAndDelete(id)
     if (!res) throw new Error('Product not found')
@@ -76,6 +82,7 @@ export async function getAllProductsForAdmin({
   sort?: string
   limit?: number
 }) {
+  await requireAdmin()
   await connectToDatabase()
 
   const {
@@ -86,7 +93,7 @@ export async function getAllProductsForAdmin({
     query && query !== 'all'
       ? {
           name: {
-            $regex: query,
+            $regex: escapeRegex(query),
             $options: 'i',
           },
         }
@@ -123,6 +130,7 @@ export async function getAllProductsForAdmin({
 }
 
 export async function renameCategory(oldName: string, newName: string) {
+  await requireAdmin()
   await connectToDatabase()
   const result = await Product.updateMany(
     { category: oldName },
@@ -142,12 +150,14 @@ export async function getAllCategories() {
 }
 
 export async function getAllCategoriesForAdmin() {
+  await requireAdmin()
   await connectToDatabase()
   const categories = await Product.find().distinct('category')
   return categories as string[]
 }
 
 export async function getAllBrandsForAdmin() {
+  await requireAdmin()
   await connectToDatabase()
   const brands = await Product.find().distinct('brand')
   return brands as string[]
@@ -280,7 +290,7 @@ export async function getAllProducts({
     query && query !== 'all'
       ? {
           name: {
-            $regex: query,
+            $regex: escapeRegex(query),
             $options: 'i',
           },
         }
@@ -288,23 +298,16 @@ export async function getAllProducts({
   const categoryFilter = category && category !== 'all' ? { category } : {}
   const tagFilter = tag && tag !== 'all' ? { tags: tag } : {}
 
+  const parsedRating = Number(rating)
   const ratingFilter =
-    rating && rating !== 'all'
-      ? {
-          avgRating: {
-            $gte: Number(rating),
-          },
-        }
+    rating && rating !== 'all' && !isNaN(parsedRating)
+      ? { avgRating: { $gte: Math.min(Math.max(parsedRating, 0), 5) } }
       : {}
-  // 10-50
+
+  const [rawMin, rawMax] = (price || '').split('-').map(Number)
   const priceFilter =
-    price && price !== 'all'
-      ? {
-          price: {
-            $gte: Number(price.split('-')[0]),
-            $lte: Number(price.split('-')[1]),
-          },
-        }
+    price && price !== 'all' && !isNaN(rawMin) && !isNaN(rawMax)
+      ? { price: { $gte: rawMin, $lte: rawMax } }
       : {}
   const order: Record<string, 1 | -1> =
     sort === 'best-selling'

@@ -4,12 +4,14 @@ import React from 'react'
 import Menu from '@/components/shared/header/menu'
 import { AdminNav } from './admin-nav'
 import { getSetting } from '@/lib/actions/setting.actions'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  await requireAdmin()
   const { site } = await getSetting()
   return (
     <>

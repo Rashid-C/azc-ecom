@@ -3,6 +3,7 @@ import { Document, Model, model, models, Schema, Types } from 'mongoose'
 
 export interface IOrder extends Document, IOrderInput {
     _id: Types.ObjectId
+    isStockAdjusted: boolean
     createdAt: Date
     updatedAt: Date
 }
@@ -51,6 +52,7 @@ const orderSchema = new Schema<IOrder>(
         totalPrice: { type: Number, required: true },
         isPaid: { type: Boolean, required: true, default: false },
         paidAt: { type: Date },
+        isStockAdjusted: { type: Boolean, required: true, default: false },
         isDelivered: { type: Boolean, required: true, default: false },
         deliveredAt: { type: Date },
         createdAt: { type: Date, default: Date.now },

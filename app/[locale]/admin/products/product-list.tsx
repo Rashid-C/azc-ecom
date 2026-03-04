@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import Link from 'next/link'
 
@@ -114,7 +113,7 @@ const ProductList = () => {
             <Link href='/admin/products/create'>Create Product</Link>
           </Button>
         </div>
-        <div>
+        <div className='overflow-x-auto'>
           <Table>
             <TableHeader>
               <TableRow>

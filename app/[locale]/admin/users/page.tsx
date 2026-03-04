@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 
-import { auth } from '@/auth'
 import DeleteDialog from '@/components/shared/delete-dialog'
 import Pagination from '@/components/shared/pagination'
 import { Button } from '@/components/ui/button'
@@ -16,6 +15,7 @@ import {
 import { deleteUser, getAllUsers } from '@/lib/actions/user.actions'
 import { IUser } from '@/lib/db/models/user.model'
 import { formatId } from '@/lib/utils'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Admin Users',
@@ -25,9 +25,7 @@ export default async function AdminUser(props: {
   searchParams: Promise<{ page: string }>
 }) {
   const searchParams = await props.searchParams
-  const session = await auth()
-  if (session?.user.role !== 'Admin')
-    throw new Error('Admin permission required')
+  await requireAdmin()
   const page = Number(searchParams.page) || 1
   const users = await getAllUsers({
     page,

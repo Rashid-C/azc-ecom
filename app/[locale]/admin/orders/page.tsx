@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 
-import { auth } from '@/auth'
 import DeleteDialog from '@/components/shared/delete-dialog'
 import Pagination from '@/components/shared/pagination'
 import { Button } from '@/components/ui/button'
@@ -17,6 +16,7 @@ import { deleteOrder, getAllOrders } from '@/lib/actions/order.actions'
 import { formatDateTime, formatId } from '@/lib/utils'
 import { IOrderList } from '@/types'
 import ProductPrice from '@/components/shared/product/product-price'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Admin Orders',
@@ -28,9 +28,7 @@ export default async function OrdersPage(props: {
 
   const { page = '1' } = searchParams
 
-  const session = await auth()
-  if (session?.user.role !== 'Admin')
-    throw new Error('Admin permission required')
+  await requireAdmin()
 
   const orders = await getAllOrders({
     page: Number(page),

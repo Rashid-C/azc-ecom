@@ -7,12 +7,14 @@ import WebPage, { IWebPage } from '@/lib/db/models/web-page.model'
 import { formatError } from '@/lib/utils'
 import { WebPageInputSchema, WebPageUpdateSchema } from '../validator'
 import z from 'zod'
+import { requireAdmin } from '../auth-guard'
 
 
 
 // CREATE
 export async function createWebPage(data: z.infer<typeof WebPageInputSchema>) {
   try {
+    await requireAdmin()
     const webPage = WebPageInputSchema.parse(data)
     await connectToDatabase()
     await WebPage.create(webPage)
@@ -29,6 +31,7 @@ export async function createWebPage(data: z.infer<typeof WebPageInputSchema>) {
 // UPDATE
 export async function updateWebPage(data: z.infer<typeof WebPageUpdateSchema>) {
   try {
+    await requireAdmin()
     const webPage = WebPageUpdateSchema.parse(data)
     await connectToDatabase()
     await WebPage.findByIdAndUpdate(webPage._id, webPage)
@@ -44,6 +47,7 @@ export async function updateWebPage(data: z.infer<typeof WebPageUpdateSchema>) {
 // DELETE
 export async function deleteWebPage(id: string) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const res = await WebPage.findByIdAndDelete(id)
     if (!res) throw new Error('WebPage not found')
@@ -59,11 +63,13 @@ export async function deleteWebPage(id: string) {
 
 // GET ALL
 export async function getAllWebPages() {
+  await requireAdmin()
   await connectToDatabase()
   const webPages = await WebPage.find()
   return JSON.parse(JSON.stringify(webPages)) as IWebPage[]
 }
 export async function getWebPageById(webPageId: string) {
+  await requireAdmin()
   await connectToDatabase()
   const webPage = await WebPage.findById(webPageId)
   return JSON.parse(JSON.stringify(webPage)) as IWebPage

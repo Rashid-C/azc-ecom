@@ -14,12 +14,14 @@ import { formatId } from '@/lib/utils'
 import { Metadata } from 'next'
 import { deleteWebPage, getAllWebPages } from '@/lib/actions/web-page.actions'
 import { IWebPage } from '@/lib/db/models/web-page.model'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Admin Web Pages',
 }
 
 export default async function WebPageAdminPage() {
+  await requireAdmin()
   const webPages = await getAllWebPages()
   return (
     <div className='space-y-2'>
@@ -33,7 +35,7 @@ export default async function WebPageAdminPage() {
           <Link href='/admin/web-pages/create'>Create WebPage</Link>
         </Button>
       </div>
-      <div>
+      <div className='overflow-x-auto'>
         <Table>
           <TableHeader>
             <TableRow>

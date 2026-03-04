@@ -11,6 +11,13 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { getSetting } from './setting.actions'
+import { requireAdmin } from '../auth-guard'
+
+const BCRYPT_SALT_ROUNDS = (() => {
+  const fromEnv = Number(process.env.BCRYPT_SALT_ROUNDS)
+  if (Number.isFinite(fromEnv) && fromEnv >= 10) return fromEnv
+  return 12
+})()
 
 // CREATE
 export async function registerUser(userSignUp: IUserSignUp) {
@@ -25,7 +32,7 @@ export async function registerUser(userSignUp: IUserSignUp) {
     await connectToDatabase()
     await User.create({
       ...user,
-      password: await bcrypt.hash(user.password, 5),
+      password: await bcrypt.hash(user.password, BCRYPT_SALT_ROUNDS),
     })
     return { success: true, message: 'User created successfully' }
   } catch (error) {
@@ -37,6 +44,7 @@ export async function registerUser(userSignUp: IUserSignUp) {
 
 export async function deleteUser(id: string) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const res = await User.findByIdAndDelete(id)
     if (!res) throw new Error('Use not found')
@@ -53,6 +61,7 @@ export async function deleteUser(id: string) {
 
 export async function updateUser(user: z.infer<typeof UserUpdateSchema>) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const dbUser = await User.findById(user._id)
     if (!dbUser) throw new Error('User not found')
@@ -72,9 +81,10 @@ export async function updateUser(user: z.infer<typeof UserUpdateSchema>) {
 }
 export async function updateUserName(user: IUserName) {
   try {
-    await connectToDatabase()
     const session = await auth()
-    const currentUser = await User.findById(session?.user?.id)
+    if (!session) throw new Error('User is not authenticated')
+    await connectToDatabase()
+    const currentUser = await User.findById(session.user.id)
     if (!currentUser) throw new Error('User not found')
     currentUser.name = user.name
     const updatedUser = await currentUser.save()
@@ -107,6 +117,7 @@ export async function getAllUsers({
   limit?: number
   page: number
 }) {
+  await requireAdmin()
   const {
     common: { pageSize },
   } = await getSetting()
@@ -126,6 +137,7 @@ export async function getAllUsers({
 }
 
 export async function getUserById(userId: string) {
+  await requireAdmin()
   await connectToDatabase()
   const user = await User.findById(userId)
   if (!user) throw new Error('User not found')

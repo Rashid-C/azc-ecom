@@ -4,6 +4,8 @@ import Stripe from 'stripe'
 import { sendPurchaseReceipt } from '@/emails'
 import { connectToDatabase } from '@/lib/db'
 import Order from '@/lib/db/models/order.model'
+import Product from '@/lib/db/models/product.model'
+import mongoose from 'mongoose'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
 
@@ -39,6 +41,9 @@ export async function POST(req: NextRequest) {
             pricePaid: (pricePaidInCents / 100).toFixed(2),
         }
         await order.save()
+        if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost')) {
+          await applyStockAdjustmentIfNeeded(order._id.toString())
+        }
         try {
             await sendPurchaseReceipt({ order })
         } catch (err) {
@@ -49,4 +54,42 @@ export async function POST(req: NextRequest) {
         })
     }
     return new NextResponse()
+}
+
+const applyStockAdjustmentIfNeeded = async (orderId: string) => {
+  const session = await mongoose.connection.startSession()
+
+  try {
+    session.startTransaction()
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId, isStockAdjusted: { $ne: true } },
+      { $set: { isStockAdjusted: true } },
+      { new: true, session }
+    )
+
+    if (!order) {
+      await session.commitTransaction()
+      session.endSession()
+      return false
+    }
+
+    for (const item of order.items) {
+      const stockUpdate = await Product.updateOne(
+        { _id: item.product, countInStock: { $gte: item.quantity } },
+        { $inc: { countInStock: -item.quantity } },
+        { session }
+      )
+      if (stockUpdate.modifiedCount !== 1) {
+        throw new Error(`Not enough stock for product: ${item.name}`)
+      }
+    }
+
+    await session.commitTransaction()
+    session.endSession()
+    return true
+  } catch (error) {
+    await session.abortTransaction()
+    session.endSession()
+    throw error
+  }
 }

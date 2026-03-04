@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 
 import { connectToDatabase } from '../db'
+import Order from '../db/models/order.model'
 import Product from '../db/models/product.model'
 import Review, { IReview } from '../db/models/review.model'
 import { formatError } from '../utils'
@@ -27,12 +28,19 @@ export async function createUpdateReview({
       throw new Error('User is not authenticated')
     }
 
+    await connectToDatabase()
+
+    const hasPaidOrder = await Order.exists({
+      user: session.user.id,
+      isPaid: true,
+      'items.product': data.product,
+    })
+
     const review = ReviewInputSchema.parse({
       ...data,
       user: session?.user?.id,
+      isVerifiedPurchase: !!hasPaidOrder,
     })
-
-    await connectToDatabase()
     const existReview = await Review.findOne({
       product: review.product,
       user: review.user,

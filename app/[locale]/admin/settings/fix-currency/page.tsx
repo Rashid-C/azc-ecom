@@ -1,10 +1,12 @@
 import { getNoCachedSetting } from '@/lib/actions/setting.actions'
 import FixCurrencyClient from './fix-currency-client'
 import { Metadata } from 'next'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = { title: 'Fix Currency Base' }
 
 export default async function FixCurrencyPage() {
+  await requireAdmin()
   const setting = await getNoCachedSetting()
   const aed = setting.availableCurrencies.find((c) => c.code === 'AED')
   const aedRate = aed?.convertRate ?? 1

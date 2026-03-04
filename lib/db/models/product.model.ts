@@ -92,6 +92,14 @@ const productSchema = new Schema<IProduct>(
     }
 )
 
+productSchema.index({ category: 1 })
+productSchema.index({ brand: 1 })
+productSchema.index({ isPublished: 1 })
+productSchema.index({ tags: 1 })
+productSchema.index({ category: 1, isPublished: 1 })
+productSchema.index({ brand: 1, isPublished: 1 })
+productSchema.index({ name: 'text' })
+
 const Product =
     (models.Product as Model<IProduct>) ||
     model<IProduct>('Product', productSchema)

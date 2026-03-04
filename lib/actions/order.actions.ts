@@ -14,6 +14,8 @@ import Product from '../db/models/product.model'
 import User from '../db/models/user.model'
 import mongoose from 'mongoose'
 import { getSetting } from './setting.actions'
+import { requireAdmin } from '../auth-guard'
+import Stripe from 'stripe'
 
 // CREATE
 export const createOrder = async (clientSideCart: Cart) => {
@@ -39,10 +41,13 @@ export const createOrderFromCart = async (
   clientSideCart: Cart,
   userId: string
 ) => {
+  await connectToDatabase()
+  const trustedItems = await buildTrustedOrderItems(clientSideCart.items)
+
   const cart = {
     ...clientSideCart,
     ...calcDeliveryDateAndPrice({
-      items: clientSideCart.items,
+      items: trustedItems,
       shippingAddress: clientSideCart.shippingAddress,
       deliveryDateIndex: clientSideCart.deliveryDateIndex,
     }),
@@ -50,7 +55,7 @@ export const createOrderFromCart = async (
 
   const order = OrderInputSchema.parse({
     user: userId,
-    items: cart.items,
+    items: trustedItems,
     shippingAddress: cart.shippingAddress,
     paymentMethod: cart.paymentMethod,
     itemsPrice: cart.itemsPrice,
@@ -62,8 +67,44 @@ export const createOrderFromCart = async (
   return await Order.create(order)
 }
 
+async function buildTrustedOrderItems(items: OrderItem[]) {
+  if (!items?.length) throw new Error('Cart is empty')
+
+  const productIds = [...new Set(items.map((item) => item.product))]
+  const products = await Product.find({ _id: { $in: productIds } }).lean()
+  const productMap = new Map(products.map((p) => [p._id.toString(), p]))
+
+  return items.map((item) => {
+    const product = productMap.get(item.product)
+    if (!product) {
+      throw new Error(`Product not found: ${item.product}`)
+    }
+    if (!product.isPublished) {
+      throw new Error(`Product is not available: ${product.name}`)
+    }
+    if (item.quantity < 1) {
+      throw new Error(`Invalid quantity for product: ${product.name}`)
+    }
+    if (item.quantity > product.countInStock) {
+      throw new Error(`Not enough stock for product: ${product.name}`)
+    }
+
+    return {
+      ...item,
+      product: product._id.toString(),
+      name: product.name,
+      slug: product.slug,
+      category: product.category,
+      image: product.images[0] || item.image,
+      countInStock: product.countInStock,
+      price: product.price,
+    }
+  })
+}
+
 export async function updateOrderToPaid(orderId: string) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const order = await Order.findById(orderId).populate<{
       user: { email: string; name: string }
@@ -74,7 +115,7 @@ export async function updateOrderToPaid(orderId: string) {
     order.paidAt = new Date()
     await order.save()
     if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
-      await updateProductStock(order._id.toString())
+      await applyStockAdjustmentIfNeeded(order._id.toString())
     if (order.user.email) await sendPurchaseReceipt({ order })
     revalidatePath(`/account/orders/${orderId}`)
     return { success: true, message: 'Order paid successfully' }
@@ -82,30 +123,34 @@ export async function updateOrderToPaid(orderId: string) {
     return { success: false, message: formatError(err) }
   }
 }
-const updateProductStock = async (orderId: string) => {
+const applyStockAdjustmentIfNeeded = async (orderId: string) => {
   const session = await mongoose.connection.startSession()
 
   try {
     session.startTransaction()
-    const opts = { session }
-
     const order = await Order.findOneAndUpdate(
-      { _id: orderId },
-      { isPaid: true, paidAt: new Date() },
-      opts
+      { _id: orderId, isStockAdjusted: { $ne: true } },
+      { $set: { isStockAdjusted: true } },
+      { new: true, session }
     )
-    if (!order) throw new Error('Order not found')
+    if (!order) {
+      await session.commitTransaction()
+      session.endSession()
+      return false
+    }
 
     for (const item of order.items) {
-      const product = await Product.findById(item.product).session(session)
-      if (!product) throw new Error('Product not found')
-
-      product.countInStock -= item.quantity
-      await Product.updateOne(
-        { _id: product._id },
-        { countInStock: product.countInStock },
-        opts
+      const stockUpdate = await Product.updateOne(
+        {
+          _id: item.product,
+          countInStock: { $gte: item.quantity },
+        },
+        { $inc: { countInStock: -item.quantity } },
+        { session }
       )
+      if (stockUpdate.modifiedCount !== 1) {
+        throw new Error(`Not enough stock for product: ${item.name}`)
+      }
     }
     await session.commitTransaction()
     session.endSession()
@@ -118,6 +163,7 @@ const updateProductStock = async (orderId: string) => {
 }
 export async function deliverOrder(orderId: string) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const order = await Order.findById(orderId).populate<{
       user: { email: string; name: string }
@@ -138,6 +184,7 @@ export async function deliverOrder(orderId: string) {
 // DELETE
 export async function deleteOrder(id: string) {
   try {
+    await requireAdmin()
     await connectToDatabase()
     const res = await Order.findByIdAndDelete(id)
     if (!res) throw new Error('Order not found')
@@ -160,6 +207,7 @@ export async function getAllOrders({
   limit?: number
   page: number
 }) {
+  await requireAdmin()
   const {
     common: { pageSize },
   } = await getSetting()
@@ -208,22 +256,32 @@ export async function getMyOrders({
   }
 }
 export async function getOrderById(orderId: string): Promise<IOrder> {
+  const session = await auth()
+  if (!session) throw new Error('User is not authenticated')
   await connectToDatabase()
-  const order = await Order.findById(orderId)
+  const order =
+    session.user.role === 'Admin'
+      ? await Order.findById(orderId)
+      : await Order.findOne({ _id: orderId, user: session.user.id })
   return JSON.parse(JSON.stringify(order))
 }
 
 export async function createPayPalOrder(orderId: string) {
+  const session = await auth()
+  if (!session) return { success: false, message: 'User is not authenticated' }
   await connectToDatabase()
   try {
-    const order = await Order.findById(orderId)
+    const order =
+      session.user.role === 'Admin'
+        ? await Order.findById(orderId)
+        : await Order.findOne({ _id: orderId, user: session.user.id })
     if (order) {
       const paypalOrder = await paypal.createOrder(order.totalPrice)
       order.paymentResult = {
         id: paypalOrder.id,
         email_address: '',
         status: '',
-        pricePaid: '0',
+        pricePaid: order.totalPrice.toFixed(2),
       }
       await order.save()
       return {
@@ -243,9 +301,17 @@ export async function approvePayPalOrder(
   orderId: string,
   data: { orderID: string }
 ) {
+  const session = await auth()
+  if (!session) return { success: false, message: 'User is not authenticated' }
   await connectToDatabase()
   try {
-    const order = await Order.findById(orderId).populate('user', 'email')
+    const order =
+      session.user.role === 'Admin'
+        ? await Order.findById(orderId).populate('user', 'email')
+        : await Order.findOne({ _id: orderId, user: session.user.id }).populate(
+            'user',
+            'email'
+          )
     if (!order) throw new Error('Order not found')
 
     const captureData = await paypal.capturePayment(data.orderID)
@@ -265,12 +331,73 @@ export async function approvePayPalOrder(
         captureData.purchase_units[0]?.payments?.captures[0]?.amount?.value,
     }
     await order.save()
+    if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
+      await applyStockAdjustmentIfNeeded(order._id.toString())
     await sendPurchaseReceipt({ order })
     revalidatePath(`/account/orders/${orderId}`)
     return {
       success: true,
       message: 'Your order has been successfully paid by PayPal',
     }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+export async function confirmStripeOrderPayment(
+  orderId: string,
+  paymentIntentId: string
+) {
+  try {
+    const session = await auth()
+    if (!session) throw new Error('User is not authenticated')
+    await connectToDatabase()
+
+    const order =
+      session.user.role === 'Admin'
+        ? await Order.findById(orderId).populate<{
+            user: { email: string; name: string }
+          }>('user', 'name email')
+        : await Order.findOne({ _id: orderId, user: session.user.id }).populate<{
+            user: { email: string; name: string }
+          }>('user', 'name email')
+
+    if (!order) throw new Error('Order not found')
+    if (order.paymentMethod !== 'Stripe') {
+      throw new Error('Invalid payment method for this confirmation')
+    }
+    if (order.isPaid) {
+      return { success: true, message: 'Order is already paid' }
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string)
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+
+    if (
+      paymentIntent.metadata.orderId == null ||
+      paymentIntent.metadata.orderId !== order._id.toString()
+    ) {
+      throw new Error('Invalid payment intent for this order')
+    }
+    if (paymentIntent.status !== 'succeeded') {
+      throw new Error('Payment has not succeeded')
+    }
+
+    order.isPaid = true
+    order.paidAt = new Date()
+    order.paymentResult = {
+      id: paymentIntent.id,
+      status: 'COMPLETED',
+      email_address: paymentIntent.receipt_email || order.user.email || '',
+      pricePaid: (paymentIntent.amount_received / 100).toFixed(2),
+    }
+    await order.save()
+    if (!process.env.MONGODB_URI?.startsWith('mongodb://localhost'))
+      await applyStockAdjustmentIfNeeded(order._id.toString())
+    if (order.user.email) await sendPurchaseReceipt({ order })
+    revalidatePath(`/account/orders/${orderId}`)
+
+    return { success: true, message: 'Order paid successfully' }
   } catch (err) {
     return { success: false, message: formatError(err) }
   }
@@ -325,6 +452,7 @@ export const calcDeliveryDateAndPrice = async ({
 
 // GET ORDERS BY USER
 export async function getOrderSummary(date: DateRange) {
+  await requireAdmin()
   await connectToDatabase()
 
   const ordersCount = await Order.countDocuments({

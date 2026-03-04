@@ -2,12 +2,14 @@ import Link from 'next/link'
 import ProductForm from '../product-form'
 import { Metadata } from 'next'
 import { getAllCategoriesForAdmin, getAllBrandsForAdmin } from '@/lib/actions/product.actions'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Create Product',
 }
 
 const CreateProductPage = async () => {
+  await requireAdmin()
   const [categories, brands] = await Promise.all([
     getAllCategoriesForAdmin(),
     getAllBrandsForAdmin(),

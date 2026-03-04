@@ -6,9 +6,7 @@ import { useForm, Resolver } from 'react-hook-form'
 
 import { z } from 'zod'
 
-import MdEditor from 'react-markdown-editor-lite'
 import ReactMarkdown from 'react-markdown'
-import 'react-markdown-editor-lite/lib/index.css'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -25,6 +23,7 @@ import { IWebPage } from '@/lib/db/models/web-page.model'
 import { WebPageInputSchema, WebPageUpdateSchema } from '@/lib/validator'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toSlug } from '@/lib/utils'
+import { Textarea } from '@/components/ui/textarea'
 
 const webPageDefaultValues =
   process.env.NODE_ENV === 'development'
@@ -156,17 +155,21 @@ const WebPageForm = ({
               <FormItem className='w-full'>
                 <FormLabel>Content</FormLabel>
                 <FormControl>
-                  <MdEditor
-                    // value={markdown}
+                  <Textarea
+                    placeholder='Enter markdown content'
+                    className='min-h-[320px] resize-y'
                     {...field}
-                    style={{ height: '500px' }}
-                    renderHTML={(text: string) => <ReactMarkdown>{text}</ReactMarkdown>}
-                    onChange={({ text }) => form.setValue('content', text)}
                   />
-
-                  {/* <Textarea placeholder='Enter content' {...field} /> */}
                 </FormControl>
                 <FormMessage />
+                <div className='mt-4 rounded-md border p-4'>
+                  <div className='mb-2 text-sm font-medium text-muted-foreground'>
+                    Live Preview
+                  </div>
+                  <div className='prose max-w-none dark:prose-invert'>
+                    <ReactMarkdown>{field.value || ''}</ReactMarkdown>
+                  </div>
+                </div>
               </FormItem>
             )}
           />

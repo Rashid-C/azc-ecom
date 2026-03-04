@@ -72,7 +72,6 @@ const useCartStore = create(
                         })),
                     },
                 })
-                // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
                 const foundItem = updatedCartItems.find(
                     (x) =>
                         x.product === item.product &&

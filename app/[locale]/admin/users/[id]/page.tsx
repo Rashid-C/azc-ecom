@@ -5,6 +5,7 @@ import { getUserById } from '@/lib/actions/user.actions'
 import UserEditForm from './user-edit-form'
 import Link from 'next/link'
 import { Metadata } from 'next'
+import { requireAdmin } from '@/lib/auth-guard'
 
 export const metadata: Metadata = {
   title: 'Edit User',
@@ -15,6 +16,7 @@ export default async function UserEditPage(props: {
     id: string
   }>
 }) {
+  await requireAdmin()
   const params = await props.params
 
   const { id } = params

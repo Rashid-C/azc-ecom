@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getWebPageById } from '@/lib/actions/web-page.actions'
 import Link from 'next/link'
 import WebPageForm from '../web-page-form'
+import { requireAdmin } from '@/lib/auth-guard'
 
 type UpdateWebPageProps = {
   params: Promise<{
@@ -11,6 +12,7 @@ type UpdateWebPageProps = {
 }
 
 const UpdateWebPage = async (props: UpdateWebPageProps) => {
+  await requireAdmin()
   const params = await props.params
 
   const { id } = params

@@ -30,9 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   adapter: MongoDBAdapter(client),
   providers: [
-    Google({
-      allowDangerousEmailAccountLinking: true,
-    }),
+    Google({}),
     CredentialsProvider({
       credentials: {
         email: {
@@ -75,7 +73,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
         }
         token.name = user.name || user.email!.split('@')[0]
-        token.role = (user as { role: string }).role
+        token.role = (user as { role?: string }).role || token.role || 'User'
       }
 
       if (session?.user?.name && trigger === 'update') {
@@ -85,7 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     session: async ({ session, user, trigger, token }) => {
       session.user.id = token.sub as string
-      session.user.role = token.role as string
+      session.user.role = (token.role as string) || 'User'
       session.user.name = token.name
       if (trigger === 'update') {
         session.user.name = user.name
