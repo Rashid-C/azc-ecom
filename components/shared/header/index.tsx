@@ -18,7 +18,7 @@ export default async function Header() {
 
       {/* ── Row 1: Logo | Categories (centered) | Icons ── */}
       <div className='px-4'>
-        <div className='grid grid-cols-[auto_1fr_auto] h-16 items-center gap-4'>
+        <div className='flex h-16 items-center justify-between gap-4'>
 
           {/* Logo */}
           <Link
@@ -33,19 +33,6 @@ export default async function Header() {
             />
             <span className='hidden sm:inline'>{site.name}</span>
           </Link>
-
-          {/* Product categories — centered, desktop only */}
-          <nav className='hidden md:flex items-center justify-center gap-0.5 overflow-hidden'>
-            {categories.map((cat) => (
-              <Link
-                key={cat}
-                href={`/search?category=${cat}`}
-                className='px-3 py-1.5 text-sm font-medium whitespace-nowrap rounded-full transition-colors text-gray-300 hover:text-white hover:bg-white/10'
-              >
-                {cat}
-              </Link>
-            ))}
-          </nav>
 
           {/* Right: language, theme, user, cart */}
           <div className='flex justify-end'>

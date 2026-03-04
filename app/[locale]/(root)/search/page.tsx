@@ -1,10 +1,11 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import Pagination from '@/components/shared/pagination'
 import ProductCard from '@/components/shared/product/product-card'
 import { Button } from '@/components/ui/button'
 import {
-  getAllCategories,
+  getCategoriesWithImages,
   getAllProducts,
   getAllTags,
 } from '@/lib/actions/product.actions'
@@ -106,7 +107,7 @@ export default async function SearchPage(props: {
 
   const params = { q, category, tag, price, rating, sort, page }
 
-  const categories = await getAllCategories()
+  const categories = await getCategoriesWithImages()
   const tags = await getAllTags()
   const data = await getAllProducts({
     category,
@@ -162,6 +163,92 @@ export default async function SearchPage(props: {
           />
         </div>
       </div>
+      {/* ── Category circle strip — desktop only ── */}
+      <div className='hidden md:flex items-center gap-4 my-3 rounded-2xl px-6 py-3 overflow-x-auto scrollbar-hide backdrop-blur-md bg-white/60 dark:bg-gray-900/40 border border-white/70 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.07)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)]'>
+
+        {/* All */}
+        <Link
+          href={getFilterUrl({ category: 'all', params })}
+          className='flex flex-col items-center gap-1.5 group shrink-0 w-16'
+        >
+          <div className='relative pb-1'>
+            <div
+              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-105
+                ${
+                  category === 'all' || category === ''
+                    ? 'bg-gray-900 dark:bg-white scale-[1.08] shadow-[0_6px_20px_rgba(0,0,0,0.35)] dark:shadow-[0_6px_20px_rgba(255,255,255,0.2)]'
+                    : 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/60 dark:border-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.08)] group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)] dark:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)]'
+                }`}
+            >
+              <svg
+                className={`w-6 h-6 transition-all duration-300 ${category === 'all' || category === '' ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-200'}`}
+                fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}
+              >
+                <path strokeLinecap='round' strokeLinejoin='round' d='M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' />
+              </svg>
+            </div>
+            {(category === 'all' || category === '') && (
+              <span className='absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-900 dark:bg-white animate-pulse' />
+            )}
+          </div>
+          <span
+            className={`text-[10px] text-center leading-tight font-semibold tracking-wide transition-all duration-300
+              ${category === 'all' || category === '' ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-200 group-hover:scale-105'}`}
+          >
+            {t('Search.All')}
+          </span>
+        </Link>
+
+        {/* Divider */}
+        <div className='h-10 w-px shrink-0 bg-linear-to-b from-transparent via-gray-300/60 dark:via-white/15 to-transparent' />
+
+        {/* Each category */}
+        {categories.map((c) => {
+          const isActive = c.name === category
+          return (
+            <Link
+              key={c.name}
+              href={getFilterUrl({ category: c.name, params })}
+              className='flex flex-col items-center gap-1.5 group shrink-0 w-16'
+            >
+              <div className='relative pb-1'>
+                {/* glow ring for active */}
+                {isActive && (
+                  <span className='absolute inset-0 rounded-full animate-pulse bg-gray-900/10 dark:bg-white/10 scale-[1.18]' />
+                )}
+                <div
+                  className={`w-14 h-14 rounded-full transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-105
+                    ${
+                      isActive
+                        ? 'ring-2 ring-gray-900/80 dark:ring-white/80 ring-offset-2 ring-offset-transparent scale-[1.08] shadow-[0_6px_20px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_20px_rgba(255,255,255,0.12)]'
+                        : 'ring-1 ring-black/8 dark:ring-white/10 shadow-[0_2px_8px_rgba(0,0,0,0.08)] group-hover:ring-gray-400/50 dark:group-hover:ring-white/25 group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)] dark:group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.45)]'
+                    }`}
+                >
+                  <div className='w-full h-full rounded-full overflow-hidden'>
+                    <Image
+                      src={c.image}
+                      alt={c.name}
+                      width={56}
+                      height={56}
+                      className='w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.12]'
+                    />
+                  </div>
+                </div>
+                {isActive && (
+                  <span className='absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-gray-900 dark:bg-white animate-pulse' />
+                )}
+              </div>
+              <span
+                className={`text-[10px] text-center leading-tight font-semibold tracking-wide transition-all duration-300 line-clamp-1
+                  ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-200 group-hover:scale-105'}`}
+              >
+                {c.name}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+
       <div className='bg-card grid md:grid-cols-5 md:gap-4'>
         <CollapsibleOnMobile title={t('Search.Filters')}>
           <div className='space-y-4'>
@@ -178,13 +265,13 @@ export default async function SearchPage(props: {
                     {t('Search.All')}
                   </Link>
                 </li>
-                {categories.map((c: string) => (
-                  <li key={c}>
+                {categories.map((c) => (
+                  <li key={c.name}>
                     <Link
-                      className={`${c === category && 'text-primary'}`}
-                      href={getFilterUrl({ category: c, params })}
+                      className={`${c.name === category && 'text-primary'}`}
+                      href={getFilterUrl({ category: c.name, params })}
                     >
-                      {c}
+                      {c.name}
                     </Link>
                   </li>
                 ))}
