@@ -17,22 +17,34 @@ const useSettingStore = create<SettingState>((set, get) => ({
     currency: data.settings[0].defaultCurrency,
   } as ClientSetting,
   setSetting: (newSetting: ClientSetting) => {
+    const aedCurrency =
+      newSetting.availableCurrencies.find((c) => c.code === 'AED') || {
+        name: 'UAE Dirham',
+        code: 'AED',
+        symbol: 'AED',
+        convertRate: 1,
+      }
     set({
       setting: {
         ...newSetting,
-        currency: newSetting.currency || get().setting.currency,
+        availableCurrencies: [aedCurrency],
+        defaultCurrency: 'AED',
+        currency: 'AED',
       },
     })
   },
   getCurrency: () => {
     return (
-      get().setting.availableCurrencies.find(
-        (c) => c.code === get().setting.currency
-      ) || data.settings[0].availableCurrencies[0]
+      get().setting.availableCurrencies.find((c) => c.code === 'AED') || {
+        name: 'UAE Dirham',
+        code: 'AED',
+        symbol: 'AED',
+        convertRate: 1,
+      }
     )
   },
-  setCurrency: async (currency: string) => {
-    set({ setting: { ...get().setting, currency } })
+  setCurrency: async () => {
+    set({ setting: { ...get().setting, currency: 'AED' } })
   },
 }))
 

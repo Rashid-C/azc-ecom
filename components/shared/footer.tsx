@@ -11,11 +11,10 @@ import { useLocale, useTranslations } from 'use-intl'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 
 export default function Footer() {
-   const router = useRouter()
+  const router = useRouter()
   const pathname = usePathname()
   const {
-    setting: { site, availableCurrencies, currency },
-    setCurrency,
+    setting: { site },
   } = useSettingStore()
   const { locales } = i18n
 
@@ -126,27 +125,9 @@ export default function Footer() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select
-                value={currency}
-                onValueChange={(value) => {
-                  setCurrency(value)
-                  window.scrollTo(0, 0)
-                }}
-                disabled
-              >
-                <SelectTrigger className='opacity-70 cursor-not-allowed'>
-                  <SelectValue placeholder={t('Footer.Select a currency')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCurrencies
-                    .filter((x) => x.code)
-                    .map((currency, index) => (
-                      <SelectItem key={index} value={currency.code}>
-                        {currency.name} ({currency.code})
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+              <div className='px-3 py-2 border rounded-md text-sm opacity-70 cursor-not-allowed'>
+                UAE Dirham (AED)
+              </div>
             </div>
           </div>
         </div>

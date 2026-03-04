@@ -205,7 +205,8 @@ export default function OrderDetailsForm({
               <ul>
                 {items.map((item) => (
                   <li key={item.slug}>
-                    {item.name} x {item.quantity} = {item.price}
+                    {item.name} x {item.quantity} ={' '}
+                    <ProductPrice price={item.price} plain />
                   </li>
                 ))}
               </ul>

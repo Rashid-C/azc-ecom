@@ -46,7 +46,7 @@ export const toSlug = (text: string): string =>
 
 
 const CURREENCY_FORMATTER = new Intl.NumberFormat('en-US', {
-  currency: 'USD',
+  currency: 'AED',
   style: 'currency',
   minimumFractionDigits: 2,
 })

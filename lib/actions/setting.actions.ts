@@ -4,25 +4,48 @@ import data from '../data'
 import Setting from '../db/models/setting.model'
 import { connectToDatabase } from '../db'
 import { formatError } from '../utils'
-import { cookies } from 'next/headers'
 
 const globalForSettings = global as unknown as {
   cachedSettings: ISettingInput | null
 }
 export const getNoCachedSetting = async (): Promise<ISettingInput> => {
   await connectToDatabase()
-  const setting = await Setting.findOne()
-  return JSON.parse(JSON.stringify(setting)) as ISettingInput
+  // Use getSetting so the auto-migration runs if needed
+  globalForSettings.cachedSettings = null
+  return getSetting()
 }
 
 export const getSetting = async (): Promise<ISettingInput> => {
   if (!globalForSettings.cachedSettings) {
-    console.log('hit db')
     await connectToDatabase()
     const setting = await Setting.findOne().lean()
-    globalForSettings.cachedSettings = setting
+    const parsed: ISettingInput = setting
       ? JSON.parse(JSON.stringify(setting))
       : data.settings[0]
+
+    // Auto-migrate: keep only AED, remove all other currencies, set as base
+    const hasOnlyAED =
+      parsed.availableCurrencies?.length === 1 &&
+      parsed.availableCurrencies[0].code === 'AED' &&
+      parsed.availableCurrencies[0].convertRate === 1
+
+    if (!hasOnlyAED) {
+      parsed.availableCurrencies = [
+        { name: 'UAE Dirham', code: 'AED', symbol: 'AED', convertRate: 1 },
+      ]
+      parsed.defaultCurrency = 'AED'
+      await Setting.findOneAndUpdate(
+        {},
+        {
+          $set: {
+            availableCurrencies: parsed.availableCurrencies,
+            defaultCurrency: 'AED',
+          },
+        }
+      )
+    }
+
+    globalForSettings.cachedSettings = parsed
   }
   return globalForSettings.cachedSettings as ISettingInput
 }
@@ -30,7 +53,19 @@ export const getSetting = async (): Promise<ISettingInput> => {
 export const updateSetting = async (newSetting: ISettingInput) => {
   try {
     await connectToDatabase()
-    const updatedSetting = await Setting.findOneAndUpdate({}, newSetting, {
+    const aedCurrency =
+      newSetting.availableCurrencies.find((c) => c.code === 'AED') || {
+        name: 'UAE Dirham',
+        code: 'AED',
+        symbol: 'AED',
+        convertRate: 1,
+      }
+    const normalizedSetting = {
+      ...newSetting,
+      availableCurrencies: [{ ...aedCurrency, convertRate: 1 }],
+      defaultCurrency: 'AED',
+    }
+    const updatedSetting = await Setting.findOneAndUpdate({}, normalizedSetting, {
       upsert: true,
       new: true,
     }).lean()
@@ -46,14 +81,41 @@ export const updateSetting = async (newSetting: ISettingInput) => {
   }
 }
 
-// Server action to update the currency cookie
-export const setCurrencyOnServer = async (newCurrency: string) => {
-  'use server'
-  const cookiesStore = await cookies()
-  cookiesStore.set('currency', newCurrency)
+// Normalize all currency convert rates so AED = 1 (base currency)
+export const fixCurrencyBaseToAED = async () => {
+  try {
+    await connectToDatabase()
+    const setting = await Setting.findOne().lean()
+    if (!setting) return { success: false, message: 'No settings found in database' }
 
-  return {
-    success: true,
-    message: 'Currency updated successfully',
+    const currencies = (setting as ISettingInput).availableCurrencies
+    const aed = currencies.find((c) => c.code === 'AED')
+    if (!aed) return { success: false, message: 'AED not found in currency list' }
+
+    if (aed.convertRate === 1) {
+      return { success: true, message: 'AED is already the base currency — no changes needed.' }
+    }
+
+    const aedRate = aed.convertRate
+    const updatedCurrencies = currencies.map((c) => ({
+      ...c,
+      convertRate: Math.round((c.convertRate / aedRate) * 10000) / 10000,
+    }))
+
+    await Setting.findOneAndUpdate(
+      {},
+      { $set: { availableCurrencies: updatedCurrencies, defaultCurrency: 'AED' } },
+      { new: true }
+    )
+    globalForSettings.cachedSettings = null // clear cache so next request re-reads DB
+
+    return {
+      success: true,
+      message: 'Done — AED is now the base currency. All prices will display correctly.',
+      updatedCurrencies,
+    }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
   }
 }
+

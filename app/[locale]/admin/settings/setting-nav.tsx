@@ -2,7 +2,6 @@
 import { Button } from '@/components/ui/button'
 import {
   CreditCard,
-  Currency,
   ImageIcon,
   Info,
   Languages,
@@ -56,11 +55,6 @@ const SettingNav = () => {
             icon: <ImageIcon />,
           },
           { name: 'Languages', hash: 'setting-languages', icon: <Languages /> },
-          {
-            name: 'Currencies',
-            hash: 'setting-currencies',
-            icon: <Currency />,
-          },
           {
             name: 'Payment Methods',
             hash: 'setting-payment-methods',

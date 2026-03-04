@@ -1,5 +1,4 @@
 'use client'
-import useSettingStore from '@/hooks/use-setting-store'
 import { cn, round2 } from '@/lib/utils'
 import { useFormatter, useTranslations } from 'next-intl'
 
@@ -18,11 +17,10 @@ const ProductPrice = ({
   forListing?: boolean
   plain?: boolean
 }) => {
-  const { getCurrency } = useSettingStore()
-  const currency = getCurrency()
+  const currency = { code: 'AED', symbol: 'AED' }
   const t = useTranslations()
-  const convertedPrice = round2(currency.convertRate * price)
-  const convertedListPrice = round2(currency.convertRate * listPrice)
+  const convertedPrice = round2(price)
+  const convertedListPrice = round2(listPrice)
 
   const format = useFormatter()
   const discountPercent = Math.round(

@@ -9,7 +9,6 @@ import { SettingInputSchema } from '@/lib/validator'
 import { ClientSetting, ISettingInput } from '@/types'
 import { updateSetting } from '@/lib/actions/setting.actions'
 import useSetting from '@/hooks/use-setting-store'
-import CurrencyForm from './currency-form'
 import PaymentMethodForm from './payment-method-form'
 import DeliveryDateForm from './delivery-date-form'
 import CommonForm from './common-form'
@@ -38,11 +37,11 @@ const SettingForm = ({ setting }: { setting: ISettingInput }) => {
         address: setting?.site?.address ?? '',
       },
       defaultLanguage: setting?.defaultLanguage ?? '',
-      defaultCurrency: setting?.defaultCurrency ?? '',
+      defaultCurrency: 'AED',
       defaultPaymentMethod: setting?.defaultPaymentMethod ?? '',
       defaultDeliveryDate: setting?.defaultDeliveryDate ?? '',
       availableLanguages: setting?.availableLanguages ?? [],
-      availableCurrencies: setting?.availableCurrencies ?? [],
+      availableCurrencies: [{ name: 'UAE Dirham', code: 'AED', symbol: 'AED', convertRate: 1 }],
       availablePaymentMethods: setting?.availablePaymentMethods ?? [],
       availableDeliveryDates: setting?.availableDeliveryDates ?? [],
     },
@@ -53,7 +52,13 @@ const SettingForm = ({ setting }: { setting: ISettingInput }) => {
 
   const { toast } = useToast()
   async function onSubmit(values: ISettingInput) {
-    const res = await updateSetting({ ...values })
+    const res = await updateSetting({
+      ...values,
+      defaultCurrency: 'AED',
+      availableCurrencies: [
+        { name: 'UAE Dirham', code: 'AED', symbol: 'AED', convertRate: 1 },
+      ],
+    })
     if (!res.success) {
       toast({
         variant: 'destructive',
@@ -79,8 +84,6 @@ const SettingForm = ({ setting }: { setting: ISettingInput }) => {
         <CarouselForm id='setting-carousels' form={form} />
 
         <LanguageForm id='setting-languages' form={form} />
-
-        <CurrencyForm id='setting-currencies' form={form} />
 
         <PaymentMethodForm id='setting-payment-methods' form={form} />
 

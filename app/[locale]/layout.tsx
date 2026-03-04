@@ -3,7 +3,6 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { hasLocale } from 'next-intl'
 import { notFound } from 'next/navigation'
-import { cookies } from 'next/headers'
 import React from 'react'
 import { getDirection } from '@/i18n-config'
 import { getSetting } from '@/lib/actions/setting.actions'
@@ -21,9 +20,7 @@ export default async function RootLayout({
   if (!hasLocale(routing.locales, locale)) notFound()
   const setting = await getSetting()
   const messages = await getMessages()
-  const cookieStore = await cookies()
-  const currency =
-    cookieStore.get('currency')?.value || setting.defaultCurrency
+  const currency = 'AED'
   return (
     <html lang={locale} dir={getDirection(locale)} suppressHydrationWarning>
       <body>

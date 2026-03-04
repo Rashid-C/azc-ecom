@@ -84,6 +84,7 @@ const ProductForm = ({
   brands?: string[]
 }) => {
   const router = useRouter()
+  const baseCurrency = { code: 'AED' }
   const [catOpen, setCatOpen] = useState(false)
   const [brandOpen, setBrandOpen] = useState(false)
   const [catOrder, setCatOrder] = useState<string[]>(() => {
@@ -350,23 +351,29 @@ const ProductForm = ({
               <FormItem className='w-full'>
                 <FormLabel>List Price</FormLabel>
                 <FormControl>
-                  <Input
-                    type='text'
-                    placeholder='0'
-                    value={listPriceDisplay}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
-                      setListPriceDisplay(val)
-                    }}
-                    onBlur={() => {
-                      const num = parseFloat(listPriceDisplay)
-                      const final = isNaN(num) ? 0 : Math.max(0, num)
-                      setListPriceDisplay(final === 0 ? '' : String(final))
-                      field.onChange(final)
-                      field.onBlur()
-                    }}
-                  />
+                  <div className='relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground pointer-events-none'>
+                      {baseCurrency?.code}
+                    </span>
+                    <Input
+                      type='text'
+                      placeholder='0.00'
+                      className='pl-14'
+                      value={listPriceDisplay}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
+                        setListPriceDisplay(val)
+                      }}
+                      onBlur={() => {
+                        const num = parseFloat(listPriceDisplay)
+                        const final = isNaN(num) ? 0 : Math.max(0, num)
+                        setListPriceDisplay(final === 0 ? '' : String(final))
+                        field.onChange(final)
+                        field.onBlur()
+                      }}
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -379,23 +386,29 @@ const ProductForm = ({
               <FormItem className='w-full'>
                 <FormLabel>Net Price</FormLabel>
                 <FormControl>
-                  <Input
-                    type='text'
-                    placeholder='0'
-                    value={priceDisplay}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
-                      setPriceDisplay(val)
-                    }}
-                    onBlur={() => {
-                      const num = parseFloat(priceDisplay)
-                      const final = isNaN(num) ? 0 : Math.max(0, num)
-                      setPriceDisplay(final === 0 ? '' : String(final))
-                      field.onChange(final)
-                      field.onBlur()
-                    }}
-                  />
+                  <div className='relative'>
+                    <span className='absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground pointer-events-none'>
+                      {baseCurrency?.code}
+                    </span>
+                    <Input
+                      type='text'
+                      placeholder='0.00'
+                      className='pl-14'
+                      value={priceDisplay}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        if (val !== '' && !/^\d*\.?\d*$/.test(val)) return
+                        setPriceDisplay(val)
+                      }}
+                      onBlur={() => {
+                        const num = parseFloat(priceDisplay)
+                        const final = isNaN(num) ? 0 : Math.max(0, num)
+                        setPriceDisplay(final === 0 ? '' : String(final))
+                        field.onChange(final)
+                        field.onBlur()
+                      }}
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
