@@ -23,6 +23,7 @@ import { formatDateTime, formatId } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import ProductPrice from '@/components/shared/product/product-price'
 import ProductPdfExport from './product-pdf-export'
+import CategoryPdfExport from './category-pdf-export'
 
 type ProductListDataProps = {
   products: IProduct[]
@@ -103,6 +104,7 @@ const ProductList = () => {
           </div>
 
           <div className='flex items-center gap-2'>
+            <CategoryPdfExport />
             <ProductPdfExport />
             <Button asChild>
               <Link href='/admin/products/create'>Create Product</Link>

@@ -140,6 +140,16 @@ export async function getAllProductsForExport() {
   return JSON.parse(JSON.stringify(products)) as IProduct[]
 }
 
+export async function getProductsByCategoryForExport(category: string) {
+  await requireAdmin()
+  await connectToDatabase()
+  const products = await Product.find({ category })
+    .sort({ _id: -1 })
+    .select('_id name price listPrice description countInStock isPublished updatedAt')
+    .lean()
+  return JSON.parse(JSON.stringify(products)) as IProduct[]
+}
+
 export async function renameCategory(oldName: string, newName: string) {
   await requireAdmin()
   await connectToDatabase()
