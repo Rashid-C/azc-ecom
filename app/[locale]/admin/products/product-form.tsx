@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import { createProduct, updateProduct } from '@/lib/actions/product.actions'
 import { IProduct } from '@/lib/db/models/product.model'
-import { UploadButton } from '@/lib/uploadthing'
+import { useUploadThing } from '@/lib/uploadthing'
 import { ProductInputSchema, ProductUpdateSchema } from '@/lib/validator'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toSlug } from '@/lib/utils'
@@ -115,6 +115,16 @@ const ProductForm = ({
   })
 
   const { toast } = useToast()
+
+  const { startUpload, isUploading } = useUploadThing('imageUploader', {
+    onClientUploadComplete: (res) => {
+      form.setValue('images', [...form.getValues('images'), res[0].url])
+      toast({ description: 'Image uploaded successfully' })
+    },
+    onUploadError: (error: Error) => {
+      toast({ variant: 'destructive', description: `Upload failed: ${error.message}` })
+    },
+  })
   async function onSubmit(values: IProductInput) {
     if (type === 'Create') {
       const res = await createProduct(values)
@@ -477,22 +487,32 @@ const ProductForm = ({
                         </div>
                         )
                       })}
-                        <UploadButton
-                          endpoint='imageUploader'
-                          onClientUploadComplete={(res: { url: string }[]) => {
-                            form.setValue('images', [...images, res[0].url])
-                          }}
-                          onUploadError={(error: Error) => {
-                            toast({
-                              variant: 'destructive',
-                              description: `ERROR! ${error.message}`,
-                            })
-                          }}
-                          appearance={{
-                            button: 'bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-full px-5 py-2 shadow transition-colors',
-                            allowedContent: 'text-amber-600 dark:text-amber-400 font-medium bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full',
-                          }}
-                        />
+                        <label className={`cursor-pointer inline-flex flex-col items-center justify-center gap-1 w-20 h-20 rounded-xl border-2 border-dashed border-primary/40 hover:border-primary bg-primary/5 hover:bg-primary/10 transition-colors ${isUploading ? 'opacity-60 pointer-events-none' : ''}`}>
+                          <input
+                            type='file'
+                            accept='image/*'
+                            className='sr-only'
+                            disabled={isUploading}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) startUpload([file])
+                              e.target.value = ''
+                            }}
+                          />
+                          {isUploading ? (
+                            <svg className='animate-spin h-5 w-5 text-primary' viewBox='0 0 24 24' fill='none'>
+                              <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                              <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v8z' />
+                            </svg>
+                          ) : (
+                            <svg className='h-5 w-5 text-primary' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                              <path d='M12 5v14M5 12h14' strokeLinecap='round' />
+                            </svg>
+                          )}
+                          <span className='text-[10px] font-medium text-primary leading-none'>
+                            {isUploading ? 'Uploading' : 'Add Photo'}
+                          </span>
+                        </label>
                     </div>
                   </CardContent>
                 </Card>
