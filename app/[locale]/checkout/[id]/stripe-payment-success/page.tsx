@@ -3,21 +3,18 @@ import { redirect } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 import { confirmStripeOrderPayment } from '@/lib/actions/order.actions'
-import { CheckCircle2, XCircle } from 'lucide-react'
+import { XCircle } from 'lucide-react'
 
 export default async function SuccessPage(props: {
-  params: Promise<{
-    id: string
-  }>
+  params: Promise<{ id: string }>
   searchParams: Promise<{ payment_intent: string }>
 }) {
-  const params = await props.params
-  const { id } = params
-  const searchParams = await props.searchParams
+  const { id } = await props.params
+  const { payment_intent } = await props.searchParams
 
-  if (!searchParams.payment_intent) return redirect(`/checkout/${id}`)
+  if (!payment_intent) return redirect(`/checkout/${id}`)
 
-  const res = await confirmStripeOrderPayment(id, searchParams.payment_intent)
+  const res = await confirmStripeOrderPayment(id, payment_intent)
 
   if (!res.success) {
     return (
@@ -37,21 +34,6 @@ export default async function SuccessPage(props: {
     )
   }
 
-  return (
-    <div className='max-w-4xl w-full mx-auto space-y-8'>
-      <div className='flex flex-col gap-6 items-center'>
-        <CheckCircle2 className='h-16 w-16 text-emerald-500' />
-        <h1 className='font-bold text-2xl lg:text-3xl'>
-          Thanks for your purchase!
-        </h1>
-        <p className='text-muted-foreground'>We are now processing your order.</p>
-        <Button
-          asChild
-          className='rounded-full bg-emerald-600 hover:bg-emerald-700 text-white'
-        >
-          <Link href={`/account/orders/${id}`}>View Order</Link>
-        </Button>
-      </div>
-    </div>
-  )
+  // Redirect straight to the order page — it reads fresh data from DB
+  redirect(`/account/orders/${id}`)
 }

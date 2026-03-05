@@ -399,7 +399,6 @@ export async function confirmStripeOrderPayment(
     } catch (emailErr) {
       console.error('sendPurchaseReceipt error (non-fatal):', emailErr)
     }
-    revalidatePath(`/account/orders/${orderId}`)
 
     return { success: true, message: 'Order paid successfully' }
   } catch (err) {
