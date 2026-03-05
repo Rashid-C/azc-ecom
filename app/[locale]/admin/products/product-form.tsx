@@ -477,7 +477,6 @@ const ProductForm = ({
                         </div>
                         )
                       })}
-                      <FormControl>
                         <UploadButton
                           endpoint='imageUploader'
                           onClientUploadComplete={(res: { url: string }[]) => {
@@ -494,7 +493,6 @@ const ProductForm = ({
                             allowedContent: 'text-amber-600 dark:text-amber-400 font-medium bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full',
                           }}
                         />
-                      </FormControl>
                     </div>
                   </CardContent>
                 </Card>
