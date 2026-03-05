@@ -13,22 +13,22 @@ const nextConfig: NextConfig = withNextIntl()({
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'utfs.io',
-        //  pathname: "/**",
-        port: '',
+        pathname: '/**',
       },
       {
-        protocol: "https",
-        hostname: "ufs.sh",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'ufs.sh',
+        pathname: '/**',
       },
       {
-        protocol: "https",
-        hostname: "**.ufs.sh",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: '**.ufs.sh',
+        pathname: '/**',
       },
     ],
   },
