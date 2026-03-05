@@ -167,6 +167,16 @@ export async function getAllCategoriesForAdmin() {
   return categories as string[]
 }
 
+export async function getCategoriesWithCounts() {
+  await requireAdmin()
+  await connectToDatabase()
+  const result = await Product.aggregate([
+    { $group: { _id: '$category', count: { $sum: 1 }, published: { $sum: { $cond: ['$isPublished', 1, 0] } } } },
+    { $sort: { _id: 1 } },
+  ])
+  return result.map((r) => ({ name: r._id as string, count: r.count as number, published: r.published as number }))
+}
+
 export async function getAllBrandsForAdmin() {
   await requireAdmin()
   await connectToDatabase()

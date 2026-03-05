@@ -138,17 +138,17 @@ export default function OverviewReport() {
       {/* Stat cards */}
       <div className='grid gap-4 grid-cols-2 lg:grid-cols-4'>
         {statCards.map(({ key, titleKey, linkHref, linkKey, icon: Icon, iconBg, iconColor }) => (
-          <Card key={key} className='hover:shadow-md transition-shadow'>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium text-muted-foreground'>
+          <Card key={key} className='hover:shadow-md transition-shadow overflow-hidden'>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2 gap-1'>
+              <CardTitle className='text-xs sm:text-sm font-medium text-muted-foreground truncate'>
                 {t(titleKey as any)}
               </CardTitle>
-              <div className={`p-2 rounded-lg ${iconBg}`}>
-                <Icon className={`h-4 w-4 ${iconColor}`} />
+              <div className={`p-1.5 sm:p-2 rounded-lg shrink-0 ${iconBg}`}>
+                <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${iconColor}`} />
               </div>
             </CardHeader>
-            <CardContent className='space-y-2'>
-              <div className='text-2xl font-bold'>{statValues[key]}</div>
+            <CardContent className='space-y-2 min-w-0 overflow-hidden'>
+              <div className='text-base sm:text-xl lg:text-2xl font-bold truncate'>{statValues[key]}</div>
               <Link
                 href={linkHref}
                 className='text-xs text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group'

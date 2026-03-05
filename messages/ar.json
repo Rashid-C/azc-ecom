@@ -99,7 +99,8 @@
     "Loading": "جاري التحميل...",
     "Rating": "التقييم",
     "No reviews yet": "لا توجد مراجعات حتى الآن",
-    "Submitting": "جاري الإرسال..."
+    "Submitting": "جاري الإرسال...",
+    "Only X left in stock - order soon": "لم يتبقَّ سوى {count} في المخزون - اطلب الآن"
   },
   "Cart": {
     "Shopping Cart": "عربة التسوق",

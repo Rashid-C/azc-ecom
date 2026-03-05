@@ -50,7 +50,8 @@ const SettingNav = () => {
   return (
     <div>
       <h1 className='h1-bold'>Settings</h1>
-      <nav className='flex md:flex-col gap-1 md:fixed mt-4 flex-wrap'>
+      {/* Mobile: horizontal scrollable icon row. Desktop: vertical fixed nav */}
+      <nav className='flex md:flex-col gap-1 mt-3 md:mt-4 overflow-x-auto md:overflow-x-visible pb-1 md:pb-0'>
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = active === item.hash
@@ -58,14 +59,14 @@ const SettingNav = () => {
             <button
               key={item.hash}
               onClick={() => handleScroll(item.hash)}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full ${
+              className={`flex shrink-0 items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-left md:w-full ${
                 isActive
                   ? 'bg-primary/10 text-primary border-l-2 border-primary pl-2.5'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 border-l-2 border-transparent pl-2.5'
               }`}
             >
               <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />
-              <span className='hidden md:inline'>{item.name}</span>
+              <span className='inline md:inline text-xs md:text-sm whitespace-nowrap'>{item.name}</span>
             </button>
           )
         })}

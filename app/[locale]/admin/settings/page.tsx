@@ -11,15 +11,15 @@ export const metadata: Metadata = {
 const SettingPage = async () => {
   await requireAdmin()
   return (
-    <div className='max-w-6xl mx-auto px-4'>
-      <div className='md:grid md:grid-cols-[220px_1fr] md:gap-8 relative'>
-        {/* Sticky sidebar */}
-        <aside className='md:sticky md:top-4 md:self-start py-6'>
+    <div className='max-w-6xl mx-auto px-2 sm:px-4 w-full'>
+      <div className='md:grid md:grid-cols-[200px_1fr] md:gap-6 relative'>
+        {/* Sticky sidebar — horizontal scroll on mobile */}
+        <aside className='md:sticky md:top-4 md:self-start py-4 md:py-6 overflow-x-auto md:overflow-x-visible'>
           <SettingNav />
         </aside>
 
         {/* Main content */}
-        <main className='py-6'>
+        <main className='py-4 md:py-6 min-w-0'>
           <SettingForm setting={await getNoCachedSetting()} />
         </main>
       </div>

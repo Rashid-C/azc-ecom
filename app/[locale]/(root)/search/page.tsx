@@ -16,6 +16,7 @@ import Rating from '@/components/shared/product/rating'
 
 import CollapsibleOnMobile from '@/components/shared/collapsible-on-mobile'
 import { getTranslations } from 'next-intl/server'
+import { SlidersHorizontal, Tag, Star, DollarSign, Layers } from 'lucide-react'
 
 const sortOrders = [
   { value: 'price-low-to-high', name: 'Price: Low to high' },
@@ -119,61 +120,69 @@ export default async function SearchPage(props: {
     sort,
   })
   const t = await getTranslations()
+  const hasFilters =
+    (q !== 'all' && q !== '') ||
+    (category !== 'all' && category !== '') ||
+    (tag !== 'all' && tag !== '') ||
+    rating !== 'all' ||
+    price !== 'all'
+
   return (
-    <div>
-      <div className='my-2 bg-card md:border-b  flex-between flex-col md:flex-row '>
-        <div className='flex items-center'>
-          {data.totalProducts === 0
-            ? t('Search.No')
-            : `${data.from}-${data.to} ${t('Search.of')} ${
-                data.totalProducts
-              }`}{' '}
-          {t('Search.results')}
-          {(q !== 'all' && q !== '') ||
-          (category !== 'all' && category !== '') ||
-          (tag !== 'all' && tag !== '') ||
-          rating !== 'all' ||
-          price !== 'all'
-            ? ` ${t('Search.for')} `
-            : null}
-          {q !== 'all' && q !== '' && '"' + q + '"'}
-          {category !== 'all' &&
-            category !== '' &&
-            `   ${t('Search.Category')}: ` + category}
-          {tag !== 'all' && tag !== '' && `   ${t('Search.Tag')}: ` + tag}
-          {price !== 'all' && `    ${t('Search.Price')}: ` + price}
-          {rating !== 'all' &&
-            `    ${t('Search.Rating')}: ` + rating + ` & ${t('Search.up')}`}
-          &nbsp;
-          {(q !== 'all' && q !== '') ||
-          (category !== 'all' && category !== '') ||
-          (tag !== 'all' && tag !== '') ||
-          rating !== 'all' ||
-          price !== 'all' ? (
-            <Button variant={'link'} asChild>
+    <div className='space-y-3'>
+      {/* Result bar */}
+      <div className='flex flex-wrap items-center justify-between gap-2 rounded-xl bg-card border px-4 py-2.5'>
+        <div className='flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground min-w-0'>
+          <span className='font-medium text-foreground'>
+            {data.totalProducts === 0
+              ? t('Search.No')
+              : `${data.from}–${data.to} ${t('Search.of')} ${data.totalProducts}`}
+            {' '}{t('Search.results')}
+          </span>
+          {hasFilters && <span>{t('Search.for')}</span>}
+          {q !== 'all' && q !== '' && (
+            <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium'>
+              &ldquo;{q}&rdquo;
+            </span>
+          )}
+          {category !== 'all' && category !== '' && (
+            <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium'>
+              {t('Search.Category')}: {category}
+            </span>
+          )}
+          {tag !== 'all' && tag !== '' && (
+            <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium'>
+              {t('Search.Tag')}: {tag}
+            </span>
+          )}
+          {price !== 'all' && (
+            <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium'>
+              {t('Search.Price')}: {price}
+            </span>
+          )}
+          {rating !== 'all' && (
+            <span className='inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium'>
+              {t('Search.Rating')}: {rating}★+
+            </span>
+          )}
+          {hasFilters && (
+            <Button variant='ghost' size='sm' className='h-6 px-2 text-xs' asChild>
               <Link href='/search'>{t('Search.Clear')}</Link>
             </Button>
-          ) : null}
+          )}
         </div>
-        <div>
-          <ProductSortSelector
-            sortOrders={sortOrders}
-            sort={sort}
-            params={params}
-          />
-        </div>
+        <ProductSortSelector sortOrders={sortOrders} sort={sort} params={params} />
       </div>
-      {/* ── Category circle strip — desktop only ── */}
-      <div className='hidden md:flex items-center  gap-2 my-3 rounded-2xl px-6 py-3 overflow-x-auto scrollbar-hide backdrop-blur-md bg-white/60 dark:bg-gray-900/40 border border-white/70 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.07)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)]'>
+      {/* ── Category circle strip ── */}
+      <div className='flex items-center gap-2 rounded-2xl px-4 md:px-6 py-3 overflow-x-auto scrollbar-hide backdrop-blur-md bg-white/60 dark:bg-gray-900/40 border border-white/70 dark:border-white/10 shadow-[0_4px_24px_rgba(0,0,0,0.07)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)]'>
 
         {/* All */}
         <Link
           href={getFilterUrl({ category: 'all', params })}
-          className='flex flex-col gap-1.5 group shrink-0 w-16'
+          className='flex flex-col gap-1 md:gap-1.5 group shrink-0 w-12 md:w-16'
         >
           <div className='relative pb-1 mx-auto'>
             <div
-              className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-105
+              className={`w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-105
                 ${
                   category === 'all' || category === ''
                     ? 'bg-gray-900 dark:bg-white scale-[1.08] shadow-[0_6px_20px_rgba(0,0,0,0.35)] dark:shadow-[0_6px_20px_rgba(255,255,255,0.2)]'
@@ -181,7 +190,7 @@ export default async function SearchPage(props: {
                 }`}
             >
               <svg
-                className={`w-6 h-6 transition-all duration-300 ${category === 'all' || category === '' ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-200'}`}
+                className={`w-4 h-4 md:w-6 md:h-6 transition-all duration-300 ${category === 'all' || category === '' ? 'text-white dark:text-gray-900' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-200'}`}
                 fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}
               >
                 <path strokeLinecap='round' strokeLinejoin='round' d='M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z' />
@@ -192,7 +201,7 @@ export default async function SearchPage(props: {
             )}
           </div>
           <span
-            className={`text-[10px] text-center leading-tight font-semibold tracking-wide transition-all duration-300
+            className={`text-[9px] md:text-[10px] text-center leading-tight font-semibold tracking-wide transition-all duration-300
               ${category === 'all' || category === '' ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-200 group-hover:scale-105'}`}
           >
             {t('Search.All')}
@@ -209,15 +218,14 @@ export default async function SearchPage(props: {
             <Link
               key={c.name}
               href={getFilterUrl({ category: c.name, params })}
-              className='flex flex-col gap-1.5 group shrink-0 w-24'
+              className='flex flex-col gap-1 md:gap-1.5 group shrink-0 w-14 md:w-24'
             >
               <div className='relative pb-1 mx-auto'>
-                {/* glow ring for active */}
                 {isActive && (
                   <span className='absolute inset-0 rounded-full animate-pulse bg-gray-900/10 dark:bg-white/10 scale-[1.18]' />
                 )}
                 <div
-                  className={`w-14 h-14 rounded-full transition-all duration-500 ease-out group-hover:-translate-y-1.5 group-hover:scale-105
+                  className={`w-10 h-10 md:w-14 md:h-14 rounded-full transition-all duration-500 ease-out group-hover:-translate-y-1 group-hover:scale-105
                     ${
                       isActive
                         ? 'ring-2 ring-gray-900/80 dark:ring-white/80 ring-offset-2 ring-offset-transparent scale-[1.08] shadow-[0_6px_20px_rgba(0,0,0,0.25)] dark:shadow-[0_6px_20px_rgba(255,255,255,0.12)]'
@@ -239,7 +247,7 @@ export default async function SearchPage(props: {
                 )}
               </div>
               <span
-                className={`text-[10px] text-center leading-snug font-semibold tracking-wide transition-all duration-300 w-full whitespace-normal wrap-break-word
+                className={`text-[9px] md:text-[10px] text-center leading-snug font-semibold tracking-wide transition-all duration-300 w-full whitespace-normal wrap-break-word
                   ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-200 group-hover:scale-105'}`}
               >
                 {c.name}
@@ -249,125 +257,174 @@ export default async function SearchPage(props: {
         })}
       </div>
 
-      <div className='bg-card grid md:grid-cols-5 md:gap-4'>
+      <div className='grid md:grid-cols-5 md:gap-5'>
+        {/* Filter sidebar */}
         <CollapsibleOnMobile title={t('Search.Filters')}>
-          <div className='space-y-4'>
+          <div className='rounded-xl border bg-card p-4 space-y-5'>
+            {/* Department */}
             <div>
-              <div className='font-bold'>{t('Search.Department')}</div>
-              <ul>
-                <li>
-                  <Link
-                    className={`${
-                      ('all' === category || '' === category) && 'text-primary'
-                    }`}
-                    href={getFilterUrl({ category: 'all', params })}
-                  >
-                    {t('Search.All')}
-                  </Link>
-                </li>
+              <div className='flex items-center gap-1.5 mb-2.5'>
+                <Layers className='h-3.5 w-3.5 text-muted-foreground' />
+                <span className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>{t('Search.Department')}</span>
+              </div>
+              <div className='flex flex-col gap-1'>
+                <Link
+                  href={getFilterUrl({ category: 'all', params })}
+                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                    'all' === category || '' === category
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  {t('Search.All')}
+                </Link>
                 {categories.map((c) => (
-                  <li key={c.name}>
-                    <Link
-                      className={`${c.name === category && 'text-primary'}`}
-                      href={getFilterUrl({ category: c.name, params })}
-                    >
-                      {c.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className='font-bold'>{t('Search.Price')}</div>
-              <ul>
-                <li>
                   <Link
-                    className={`${'all' === price && 'text-primary'}`}
-                    href={getFilterUrl({ price: 'all', params })}
-                  >
-                    {t('Search.All')}
-                  </Link>
-                </li>
-                {prices.map((p) => (
-                  <li key={p.value}>
-                    <Link
-                      href={getFilterUrl({ price: p.value, params })}
-                      className={`${p.value === price && 'text-primary'}`}
-                    >
-                      {p.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className='font-bold'>{t('Search.Customer Review')}</div>
-              <ul>
-                <li>
-                  <Link
-                    href={getFilterUrl({ rating: 'all', params })}
-                    className={`${'all' === rating && 'text-primary'}`}
-                  >
-                    {t('Search.All')}
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    href={getFilterUrl({ rating: '4', params })}
-                    className={`${'4' === rating && 'text-primary'}`}
-                  >
-                    <div className='flex'>
-                      <Rating size={4} rating={4} /> {t('Search.& Up')}
-                    </div>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <div className='font-bold'>{t('Search.Tag')}</div>
-              <ul>
-                <li>
-                  <Link
-                    className={`${
-                      ('all' === tag || '' === tag) && 'text-primary'
+                    key={c.name}
+                    href={getFilterUrl({ category: c.name, params })}
+                    className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                      c.name === category
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
-                    href={getFilterUrl({ tag: 'all', params })}
                   >
-                    {t('Search.All')}
+                    {c.name}
                   </Link>
-                </li>
-                {tags.map((t: string) => (
-                  <li key={t}>
-                    <Link
-                      className={`${toSlug(t) === tag && 'text-primary'}`}
-                      href={getFilterUrl({ tag: t, params })}
-                    >
-                      {t}
-                    </Link>
-                  </li>
                 ))}
-              </ul>
+              </div>
+            </div>
+
+            <div className='h-px bg-border' />
+
+            {/* Price */}
+            <div>
+              <div className='flex items-center gap-1.5 mb-2.5'>
+                <DollarSign className='h-3.5 w-3.5 text-muted-foreground' />
+                <span className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>{t('Search.Price')}</span>
+              </div>
+              <div className='flex flex-col gap-1'>
+                <Link
+                  href={getFilterUrl({ price: 'all', params })}
+                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                    'all' === price
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  {t('Search.All')}
+                </Link>
+                {prices.map((p) => (
+                  <Link
+                    key={p.value}
+                    href={getFilterUrl({ price: p.value, params })}
+                    className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                      p.value === price
+                        ? 'bg-primary text-primary-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    {p.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className='h-px bg-border' />
+
+            {/* Rating */}
+            <div>
+              <div className='flex items-center gap-1.5 mb-2.5'>
+                <Star className='h-3.5 w-3.5 text-muted-foreground' />
+                <span className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>{t('Search.Customer Review')}</span>
+              </div>
+              <div className='flex flex-col gap-1'>
+                <Link
+                  href={getFilterUrl({ rating: 'all', params })}
+                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                    'all' === rating
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  {t('Search.All')}
+                </Link>
+                <Link
+                  href={getFilterUrl({ rating: '4', params })}
+                  className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                    '4' === rating
+                      ? 'bg-primary text-primary-foreground font-medium'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <div className='flex items-center gap-1'>
+                    <Rating size={4} rating={4} />
+                    <span>{t('Search.& Up')}</span>
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            <div className='h-px bg-border' />
+
+            {/* Tags */}
+            <div>
+              <div className='flex items-center gap-1.5 mb-2.5'>
+                <Tag className='h-3.5 w-3.5 text-muted-foreground' />
+                <span className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>{t('Search.Tag')}</span>
+              </div>
+              <div className='flex flex-wrap gap-1.5'>
+                <Link
+                  href={getFilterUrl({ tag: 'all', params })}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    'all' === tag || '' === tag
+                      ? 'bg-primary text-primary-foreground border-primary font-medium'
+                      : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                  }`}
+                >
+                  {t('Search.All')}
+                </Link>
+                {tags.map((t: string) => (
+                  <Link
+                    key={t}
+                    href={getFilterUrl({ tag: t, params })}
+                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                      toSlug(t) === tag
+                        ? 'bg-primary text-primary-foreground border-primary font-medium'
+                        : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                    }`}
+                  >
+                    {t}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </CollapsibleOnMobile>
 
+        {/* Product grid */}
         <div className='md:col-span-4 space-y-4'>
-          <div>
-            <div className='font-bold text-xl'>{t('Search.Results')}</div>
+          <div className='flex items-center justify-between'>
             <div>
-              {t('Search.Check each product page for other buying options')}
+              <h1 className='font-bold text-lg'>{t('Search.Results')}</h1>
+              <p className='text-sm text-muted-foreground'>{t('Search.Check each product page for other buying options')}</p>
             </div>
           </div>
 
-          <div className='grid grid-cols-1 gap-4 md:grid-cols-2  lg:grid-cols-3  '>
-            {data.products.length === 0 && (
-              <div>{t('Search.No product found')}</div>
-            )}
-            {data.products.map((product: IProduct) => (
-              <ProductCard key={product._id.toString()} product={product} />
-            ))}
-          </div>
+          {data.products.length === 0 ? (
+            <div className='flex flex-col items-center justify-center py-16 text-center rounded-xl border bg-card'>
+              <SlidersHorizontal className='h-12 w-12 text-muted-foreground/40 mb-3' />
+              <p className='font-medium text-muted-foreground'>{t('Search.No product found')}</p>
+              <Button variant='link' asChild className='mt-2'>
+                <Link href='/search'>{t('Search.Clear')}</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className='grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
+              {data.products.map((product: IProduct) => (
+                <ProductCard key={product._id.toString()} product={product} />
+              ))}
+            </div>
+          )}
           {data.totalPages > 1 && (
             <Pagination page={page} totalPages={data.totalPages} />
           )}

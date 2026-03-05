@@ -21,9 +21,9 @@ export default async function RootLayout({
   }
 
   return (
-    <div className='flex flex-col min-h-screen'>
+    <div className='flex flex-col min-h-screen w-full overflow-x-hidden'>
       <Header />
-      <main className='flex-1 flex flex-col p-4'>{children}</main>
+      <main className='flex-1 flex flex-col p-2 sm:p-4 w-full overflow-x-hidden'>{children}</main>
       <Footer />
     </div>
   )

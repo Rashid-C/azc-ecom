@@ -19,9 +19,9 @@ export default async function HomeLayout({
   }
 
   return (
-    <div className='flex flex-col min-h-screen'>
+    <div className='flex flex-col min-h-screen w-full overflow-x-hidden'>
       <Header />
-      <main className='flex-1 flex flex-col'>{children}</main>
+      <main className='flex-1 flex flex-col w-full overflow-x-hidden'>{children}</main>
       <Footer />
     </div>
   )

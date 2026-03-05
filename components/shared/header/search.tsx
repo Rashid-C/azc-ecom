@@ -21,7 +21,7 @@ export default async function Search() {
   return (
     <form action='/search' method='GET' className='flex  items-stretch h-10 '>
       <Select name='category'>
-        <SelectTrigger className='w-auto h-full bg-gray-700 text-white border-none rounded-r-none rounded-l-md rtl:rounded-r-md rtl:rounded-l-none hover:bg-gray-600 transition-colors'>
+        <SelectTrigger className='hidden md:flex w-auto h-full bg-gray-700 text-white border-none rounded-r-none rounded-l-md rtl:rounded-r-md rtl:rounded-l-none hover:bg-gray-600 transition-colors'>
           <SelectValue placeholder={t('Header.All')} />
         </SelectTrigger>
         <SelectContent position='popper' className='bg-white text-gray-900 border border-gray-200'>
@@ -34,7 +34,7 @@ export default async function Search() {
         </SelectContent>
       </Select>
       <Input
-        className='flex-1 rounded-none dark:border-gray-200 bg-gray-100 text-black text-base h-full'
+        className='flex-1 rounded-none rounded-l-md md:rounded-none dark:border-gray-200 bg-gray-100 text-black text-base h-full'
         placeholder={t('Header.Search Site', { name })}
         name='q'
         type='search'
