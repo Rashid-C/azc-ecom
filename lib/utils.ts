@@ -89,7 +89,9 @@ export const formatError = (error: any): string => {
   } else if (error.name === 'CastError') {
     return 'Invalid ID format'
   } else {
-    return 'Something went wrong. Please try again.'
+    return typeof error.message === 'string' && error.message
+      ? error.message
+      : 'Something went wrong. Please try again.'
   }
 }
 
