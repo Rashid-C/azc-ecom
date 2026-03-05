@@ -255,6 +255,35 @@ export async function getMyOrders({
     totalPages: Math.ceil(ordersCount / limit),
   }
 }
+export async function getMyAddresses() {
+  await connectToDatabase()
+  const session = await auth()
+  if (!session) throw new Error('User is not authenticated')
+  const orders = await Order.find({ user: session.user.id })
+    .sort({ createdAt: -1 })
+    .select('shippingAddress createdAt _id')
+    .limit(50)
+  // Deduplicate by street+city
+  const seen = new Set<string>()
+  const addresses: { address: IOrder['shippingAddress']; lastUsed: Date; orderId: string }[] = []
+  for (const order of orders) {
+    const key = `${order.shippingAddress.street}|${order.shippingAddress.city}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      addresses.push({
+        address: order.shippingAddress,
+        lastUsed: order.createdAt,
+        orderId: order._id.toString(),
+      })
+    }
+  }
+  return JSON.parse(JSON.stringify(addresses)) as {
+    address: IOrder['shippingAddress']
+    lastUsed: string
+    orderId: string
+  }[]
+}
+
 export async function getOrderById(orderId: string): Promise<IOrder> {
   const session = await auth()
   if (!session) throw new Error('User is not authenticated')
