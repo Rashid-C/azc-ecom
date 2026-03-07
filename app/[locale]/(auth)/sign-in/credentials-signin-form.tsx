@@ -109,6 +109,15 @@ export default function CredentialsSignInForm() {
             )}
           />
 
+          <div className='flex justify-end'>
+            <Link
+              href='/forgot-password'
+              className='text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors'
+            >
+              Forgot password?
+            </Link>
+          </div>
+
           <Button
             type='submit'
             className='w-full'

@@ -32,6 +32,8 @@ const publicPages = [
   '/search',
   '/sign-in',
   '/sign-up',
+  '/forgot-password',
+  '/reset-password',
   '/cart',
   '/cart/(.*)',
   '/product/(.*)',

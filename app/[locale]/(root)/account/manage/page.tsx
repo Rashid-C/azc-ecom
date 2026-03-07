@@ -61,15 +61,10 @@ export default async function ProfilePage() {
             <div>
               <h3 className='font-bold'>Password</h3>
               <p>************</p>
-              <p>will be implemented in the next version</p>
             </div>
             <div>
-              <Link href='#'>
-                <Button
-                  disabled
-                  className='rounded-full w-32'
-                  variant='outline'
-                >
+              <Link href='/account/manage/password'>
+                <Button className='rounded-full w-32' variant='outline'>
                   Edit
                 </Button>
               </Link>

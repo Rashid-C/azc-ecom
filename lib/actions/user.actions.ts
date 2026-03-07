@@ -1,6 +1,7 @@
 'use server'
 
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { auth, signIn, signOut } from '@/auth'
 import { IUserName, IUserSignIn, IUserSignUp } from '@/types'
 import { UserSignUpSchema, UserUpdateSchema } from '../validator'
@@ -12,6 +13,8 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { getSetting } from './setting.actions'
 import { requireAdmin } from '../auth-guard'
+import { sendPasswordResetEmail } from '@/emails'
+import { headers } from 'next/headers'
 
 const BCRYPT_SALT_ROUNDS = (() => {
   const fromEnv = Number(process.env.BCRYPT_SALT_ROUNDS)
@@ -142,4 +145,110 @@ export async function getUserById(userId: string) {
   const user = await User.findById(userId)
   if (!user) throw new Error('User not found')
   return JSON.parse(JSON.stringify(user)) as IUser
+}
+
+// CHANGE PASSWORD (logged-in user)
+export async function updateUserPassword({
+  currentPassword,
+  newPassword,
+}: {
+  currentPassword: string
+  newPassword: string
+}) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) return { success: false, message: 'Not authenticated' }
+
+    await connectToDatabase()
+    const user = await User.findById(session.user.id)
+    if (!user) return { success: false, message: 'User not found' }
+
+    // Google-only accounts have no password
+    if (!user.password) {
+      return {
+        success: false,
+        message: 'Your account uses Google sign-in. Password change is not available.',
+      }
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password)
+    if (!isMatch) {
+      return { success: false, message: 'Current password is incorrect.' }
+    }
+
+    user.password = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS)
+    await user.save()
+
+    return { success: true, message: 'Password updated successfully.' }
+  } catch (error) {
+    return { success: false, message: formatError(error) }
+  }
+}
+
+// REQUEST PASSWORD RESET
+export async function requestPasswordReset(email: string) {
+  try {
+    await connectToDatabase()
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return { success: true }
+    }
+
+    const token = crypto.randomBytes(32).toString('hex')
+    const expires = new Date(Date.now() + 1000 * 60 * 60) // 1 hour
+
+    user.resetPasswordToken = token
+    user.resetPasswordExpires = expires
+    await user.save()
+
+    const { site } = await getSetting()
+    // Use the actual request origin so the link works on any environment (localhost, staging, production)
+    const headersList = await headers()
+    const origin =
+      headersList.get('origin') ||
+      headersList.get('x-forwarded-proto') + '://' + headersList.get('host') ||
+      site.url
+
+    await sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      token,
+      siteUrl: origin,
+      siteName: site.name,
+    })
+
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: formatError(error) }
+  }
+}
+
+// RESET PASSWORD WITH TOKEN
+export async function resetPassword(token: string, newPassword: string) {
+  try {
+    if (!token || !newPassword || newPassword.length < 8) {
+      return { success: false, error: 'Invalid request' }
+    }
+
+    await connectToDatabase()
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    })
+
+    if (!user) {
+      return { success: false, error: 'Reset link is invalid or has expired.' }
+    }
+
+    user.password = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS)
+    user.resetPasswordToken = undefined
+    user.resetPasswordExpires = undefined
+    await user.save()
+
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: formatError(error) }
+  }
 }
