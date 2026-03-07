@@ -37,7 +37,7 @@ const signUpDefaultValues =
         confirmPassword: '',
       }
 
-export default function CredentialsSignInForm() {
+export default function SignUpForm() {
   const {
     setting: { site },
   } = useSettingStore()
