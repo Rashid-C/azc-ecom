@@ -563,6 +563,73 @@ const ProductForm = ({
             )}
           />
         </div>
+
+        <div>
+          <FormField
+            control={form.control}
+            name='tags'
+            render={({ field }) => {
+              const PRESET_TAGS = [
+                { value: 'new-arrival', label: 'New Arrival', color: 'emerald' },
+                { value: 'best-seller', label: 'Best Seller', color: 'amber' },
+                { value: 'todays-deal', label: "Today's Deal", color: 'rose' },
+                { value: 'featured', label: 'Featured', color: 'violet' },
+              ]
+              const current: string[] = field.value ?? []
+              const toggle = (tag: string) => {
+                field.onChange(
+                  current.includes(tag)
+                    ? current.filter((t) => t !== tag)
+                    : [...current, tag]
+                )
+              }
+              const colorMap: Record<string, string> = {
+                emerald:
+                  'border-emerald-300 dark:border-emerald-700 data-[active=true]:bg-emerald-500 data-[active=true]:border-emerald-500 data-[active=true]:text-white hover:bg-emerald-50 dark:hover:bg-emerald-950',
+                amber:
+                  'border-amber-300 dark:border-amber-700 data-[active=true]:bg-amber-500 data-[active=true]:border-amber-500 data-[active=true]:text-white hover:bg-amber-50 dark:hover:bg-amber-950',
+                rose:
+                  'border-rose-300 dark:border-rose-700 data-[active=true]:bg-rose-500 data-[active=true]:border-rose-500 data-[active=true]:text-white hover:bg-rose-50 dark:hover:bg-rose-950',
+                violet:
+                  'border-violet-300 dark:border-violet-700 data-[active=true]:bg-violet-500 data-[active=true]:border-violet-500 data-[active=true]:text-white hover:bg-violet-50 dark:hover:bg-violet-950',
+              }
+              return (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormDescription>
+                    Select tags to feature this product in home page sections.
+                  </FormDescription>
+                  <FormControl>
+                    <div className='flex flex-wrap gap-2 pt-1'>
+                      {PRESET_TAGS.map(({ value, label, color }) => (
+                        <button
+                          key={value}
+                          type='button'
+                          data-active={current.includes(value)}
+                          onClick={() => toggle(value)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors cursor-pointer ${colorMap[color]}`}
+                        >
+                          {current.includes(value) && (
+                            <svg
+                              className='w-3.5 h-3.5 shrink-0'
+                              viewBox='0 0 16 16'
+                              fill='currentColor'
+                            >
+                              <path d='M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z' />
+                            </svg>
+                          )}
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )
+            }}
+          />
+        </div>
+
         <div>
           <Button
             type='submit'
