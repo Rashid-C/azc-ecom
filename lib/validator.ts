@@ -201,12 +201,13 @@ export const UserInputSchema = z.object({
 
 export const UserSignInSchema = z.object({
   email: Email,
-  password: Password,
+  password: z.string().min(1, 'Password is required'),
 })
 
-
-export const UserSignUpSchema = UserSignInSchema.extend({
+export const UserSignUpSchema = z.object({
+  email: Email,
   name: UserName,
+  password: Password,
   confirmPassword: Password,
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",

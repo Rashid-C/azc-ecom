@@ -36,6 +36,7 @@ export async function registerUser(userSignUp: IUserSignUp) {
     await User.create({
       ...user,
       password: await bcrypt.hash(user.password, BCRYPT_SALT_ROUNDS),
+      emailVerified: true,
     })
     return { success: true, message: 'User created successfully' }
   } catch (error) {
