@@ -18,8 +18,9 @@ export const GET = async (request: NextRequest) => {
     listType === 'history'
       ? {
           _id: { $in: productIds },
+          isPublished: true,
         }
-      : { category: { $in: categories }, _id: { $nin: productIds } }
+      : { category: { $in: categories }, _id: { $nin: productIds }, isPublished: true }
 
   await connectToDatabase()
   const products = await Product.find(filter)
