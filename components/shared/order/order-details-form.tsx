@@ -28,13 +28,16 @@ import {
   User,
   Phone,
 } from 'lucide-react'
+import OrderInvoicePdf, { InvoiceSite } from './order-invoice-pdf'
 
 export default function OrderDetailsForm({
   order,
   isAdmin,
+  site,
 }: {
   order: IOrder
   isAdmin: boolean
+  site?: InvoiceSite
 }) {
   const {
     shippingAddress,
@@ -81,6 +84,9 @@ export default function OrderDetailsForm({
               </div>
             </div>
 
+            {site && (
+              <OrderInvoicePdf order={order} site={site} />
+            )}
             {!isPaid && ['Stripe', 'PayPal'].includes(paymentMethod) && (
               <Link
                 className={cn(

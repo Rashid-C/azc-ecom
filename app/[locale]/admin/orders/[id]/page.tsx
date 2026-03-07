@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 
 import { getOrderById } from '@/lib/actions/order.actions'
+import { getSetting } from '@/lib/actions/setting.actions'
 import OrderDetailsForm from '@/components/shared/order/order-details-form'
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth-guard'
@@ -20,7 +21,10 @@ const AdminOrderDetailsPage = async (props: {
 
   const { id } = params
 
-  const order = await getOrderById(id)
+  const [order, { site }] = await Promise.all([
+    getOrderById(id),
+    getSetting(),
+  ])
   if (!order) notFound()
 
   return (
@@ -37,7 +41,17 @@ const AdminOrderDetailsPage = async (props: {
           {order._id.toString()}
         </span>
       </nav>
-      <OrderDetailsForm order={order} isAdmin />
+      <OrderDetailsForm
+        order={order}
+        isAdmin
+        site={{
+          name: site.name,
+          address: site.address,
+          email: site.email,
+          phone: site.phone,
+          url: site.url,
+        }}
+      />
     </main>
   )
 }
