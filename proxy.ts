@@ -64,6 +64,12 @@ export default auth(async (req) => {
     }
   }
 
+  // Do not apply i18n page routing/redirect logic to API handlers.
+  // Keep API routes functional while still allowing the rate-limit block above.
+  if (pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   // Auth + i18n routing
   const publicPathnameRegex = RegExp(
     `^(/(${routing.locales.join('|')}))?(${publicPages
@@ -89,5 +95,5 @@ export default auth(async (req) => {
 })
 
 export const config = {
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  matcher: ['/((?!_next|.*\\..*).*)'],
 }

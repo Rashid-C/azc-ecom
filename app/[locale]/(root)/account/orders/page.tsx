@@ -76,7 +76,9 @@ export default async function OrdersPage(props: {
                     : 'No'}
                 </TableCell>
                 <TableCell>
-                  {order.isDelivered && order.deliveredAt
+                  {order.isCancelled
+                    ? 'Cancelled'
+                    : order.isDelivered && order.deliveredAt
                     ? formatDateTime(order.deliveredAt).dateTime
                     : 'No'}
                 </TableCell>

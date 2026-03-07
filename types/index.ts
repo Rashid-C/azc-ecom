@@ -44,6 +44,8 @@ export type IOrderList = IOrderInput & {
         email: string
     }
     createdAt: Date
+    isCancelled: boolean
+    cancelledAt?: Date
 }
 
 

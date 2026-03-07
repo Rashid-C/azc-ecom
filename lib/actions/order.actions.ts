@@ -110,6 +110,7 @@ export async function updateOrderToPaid(orderId: string) {
       user: { email: string; name: string }
     }>('user', 'name email')
     if (!order) throw new Error('Order not found')
+    if (order.isCancelled) throw new Error('Cannot update a cancelled order')
     if (order.isPaid) throw new Error('Order is already paid')
     order.isPaid = true
     order.paidAt = new Date()
@@ -169,6 +170,7 @@ export async function deliverOrder(orderId: string) {
       user: { email: string; name: string }
     }>('user', 'name email')
     if (!order) throw new Error('Order not found')
+    if (order.isCancelled) throw new Error('Cannot update a cancelled order')
     if (!order.isPaid) throw new Error('Order is not paid')
     order.isDelivered = true
     order.deliveredAt = new Date()
@@ -176,6 +178,30 @@ export async function deliverOrder(orderId: string) {
     if (order.user.email) await sendAskReviewOrderItems({ order })
     revalidatePath(`/account/orders/${orderId}`)
     return { success: true, message: 'Order delivered successfully' }
+  } catch (err) {
+    return { success: false, message: formatError(err) }
+  }
+}
+
+export async function cancelOrder(orderId: string) {
+  try {
+    const session = await auth()
+    if (!session) throw new Error('Not authenticated')
+    await connectToDatabase()
+    const order = await Order.findById(orderId)
+    if (!order) throw new Error('Order not found')
+    if (order.user.toString() !== session.user.id)
+      throw new Error('Not authorized to cancel this order')
+    if (order.isCancelled) throw new Error('Order is already cancelled')
+    if (order.isPaid) throw new Error('Paid orders cannot be cancelled')
+    if (order.isDelivered) throw new Error('Delivered orders cannot be cancelled')
+    order.isCancelled = true
+    order.cancelledAt = new Date()
+    await order.save()
+    revalidatePath(`/account/orders/${orderId}`)
+    revalidatePath('/account/orders')
+    revalidatePath(`/admin/orders/${orderId}`)
+    return { success: true, message: 'Order cancelled successfully' }
   } catch (err) {
     return { success: false, message: formatError(err) }
   }
@@ -305,6 +331,15 @@ export async function createPayPalOrder(orderId: string) {
         ? await Order.findById(orderId)
         : await Order.findOne({ _id: orderId, user: session.user.id })
     if (order) {
+      if (order.isCancelled) {
+        throw new Error('Cannot pay for a cancelled order')
+      }
+      if (order.paymentMethod !== 'PayPal') {
+        throw new Error('Invalid payment method for this order')
+      }
+      if (order.isPaid) {
+        return { success: true, message: 'Order is already paid' }
+      }
       const paypalOrder = await paypal.createOrder(order.totalPrice)
       order.paymentResult = {
         id: paypalOrder.id,
@@ -342,6 +377,11 @@ export async function approvePayPalOrder(
             'email'
           )
     if (!order) throw new Error('Order not found')
+    if (order.isCancelled) throw new Error('Cannot pay for a cancelled order')
+    if (order.paymentMethod !== 'PayPal') {
+      throw new Error('Invalid payment method for this order')
+    }
+    if (order.isPaid) return { success: true, message: 'Order is already paid' }
 
     const captureData = await paypal.capturePayment(data.orderID)
     if (
@@ -350,6 +390,22 @@ export async function approvePayPalOrder(
       captureData.status !== 'COMPLETED'
     )
       throw new Error('Error in paypal payment')
+    const captureAmount = Number(
+      captureData.purchase_units[0]?.payments?.captures?.[0]?.amount?.value
+    )
+    const captureCurrency =
+      captureData.purchase_units[0]?.payments?.captures?.[0]?.amount
+        ?.currency_code || captureData.purchase_units[0]?.amount?.currency_code
+    const expectedAmount = Number(order.totalPrice.toFixed(2))
+    if (
+      !Number.isFinite(captureAmount) ||
+      Math.abs(captureAmount - expectedAmount) > 0.01
+    ) {
+      throw new Error('PayPal payment amount mismatch')
+    }
+    if ((captureCurrency || '').toUpperCase() !== 'AED') {
+      throw new Error('PayPal payment currency mismatch')
+    }
     order.isPaid = true
     order.paidAt = new Date()
     order.paymentResult = {
@@ -392,6 +448,9 @@ export async function confirmStripeOrderPayment(
           }>('user', 'name email')
 
     if (!order) throw new Error('Order not found')
+    if (order.isCancelled) {
+      throw new Error('Cannot pay for a cancelled order')
+    }
     if (order.paymentMethod !== 'Stripe') {
       throw new Error('Invalid payment method for this confirmation')
     }
@@ -410,6 +469,13 @@ export async function confirmStripeOrderPayment(
     }
     if (paymentIntent.status !== 'succeeded') {
       throw new Error('Payment has not succeeded')
+    }
+    const expectedAmountInCents = Math.round(order.totalPrice * 100)
+    if (paymentIntent.amount_received !== expectedAmountInCents) {
+      throw new Error('Stripe payment amount mismatch')
+    }
+    if ((paymentIntent.currency || '').toLowerCase() !== 'aed') {
+      throw new Error('Stripe payment currency mismatch')
     }
 
     order.isPaid = true

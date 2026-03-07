@@ -2,6 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
 
 import { Badge } from '@/components/ui/badge'
 import {
@@ -13,10 +16,10 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { IOrder } from '@/lib/db/models/order.model'
 import { cn, formatDateTime } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import ProductPrice from '../product/product-price'
 import ActionButton from '../action-button'
-import { deliverOrder, updateOrderToPaid } from '@/lib/actions/order.actions'
+import { cancelOrder, deliverOrder, updateOrderToPaid } from '@/lib/actions/order.actions'
 import {
   MapPin,
   CreditCard,
@@ -27,6 +30,7 @@ import {
   Truck,
   User,
   Phone,
+  XCircle,
 } from 'lucide-react'
 import OrderInvoicePdf, { InvoiceSite } from './order-invoice-pdf'
 
@@ -39,6 +43,10 @@ export default function OrderDetailsForm({
   isAdmin: boolean
   site?: InvoiceSite
 }) {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [isCancelling, startCancelTransition] = useTransition()
+  const [localCancelled, setLocalCancelled] = useState(order.isCancelled)
   const {
     shippingAddress,
     items,
@@ -52,7 +60,13 @@ export default function OrderDetailsForm({
     isDelivered,
     deliveredAt,
     expectedDeliveryDate,
+    cancelledAt,
   } = order
+  const isCancelled = localCancelled
+
+  useEffect(() => {
+    setLocalCancelled(order.isCancelled)
+  }, [order.isCancelled])
 
   return (
     <div className='grid md:grid-cols-3 md:gap-5'>
@@ -87,7 +101,7 @@ export default function OrderDetailsForm({
             {site && (
               <OrderInvoicePdf order={order} site={site} />
             )}
-            {!isPaid && ['Stripe', 'PayPal'].includes(paymentMethod) && (
+            {!isCancelled && !isPaid && ['Stripe', 'PayPal'].includes(paymentMethod) && (
               <Link
                 className={cn(
                   buttonVariants(),
@@ -98,19 +112,48 @@ export default function OrderDetailsForm({
                 Pay Order
               </Link>
             )}
-            {isAdmin && !isPaid && paymentMethod === 'Cash On Delivery' && (
+            {isAdmin && !isCancelled && !isPaid && paymentMethod === 'Cash On Delivery' && (
               <ActionButton
                 caption='Mark as paid'
                 action={() => updateOrderToPaid(order._id.toString())}
                 className='w-full font-semibold'
               />
             )}
-            {isAdmin && isPaid && !isDelivered && (
+            {isAdmin && !isCancelled && isPaid && !isDelivered && (
               <ActionButton
                 caption='Mark as delivered'
                 action={() => deliverOrder(order._id.toString())}
                 className='w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold'
               />
+            )}
+            {!isAdmin && !isCancelled && !isDelivered && (
+              <Button
+                disabled={isCancelling}
+                onClick={() =>
+                  startCancelTransition(async () => {
+                    const res = await cancelOrder(order._id.toString())
+                    toast({
+                      variant: res.success ? 'default' : 'destructive',
+                      description: res.message,
+                    })
+                    if (res.success) {
+                      setLocalCancelled(true)
+                      router.refresh()
+                    }
+                  })
+                }
+                className='w-full rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold'
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+              </Button>
+            )}
+            {isCancelled && (
+              <div className='flex items-center gap-2 bg-red-500/10 rounded-lg px-3 py-2'>
+                <XCircle className='h-4 w-4 shrink-0 text-red-500' />
+                <span className='text-sm font-medium text-red-600 dark:text-red-400'>
+                  Cancelled {cancelledAt ? formatDateTime(cancelledAt).dateTime : ''}
+                </span>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -149,7 +192,12 @@ export default function OrderDetailsForm({
               </div>
             </div>
             <Separator />
-            {isDelivered ? (
+            {isCancelled ? (
+              <div className='flex items-center gap-2 bg-red-500/10 rounded-lg px-3 py-2'>
+                <XCircle className='h-4 w-4 shrink-0 text-red-500' />
+                <span className='text-sm font-medium text-red-600 dark:text-red-400'>Order cancelled</span>
+              </div>
+            ) : isDelivered ? (
               <div className='flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 bg-emerald-500/8 rounded-lg px-3 py-2'>
                 <CheckCircle2 className='h-4 w-4 shrink-0' />
                 <span className='font-medium'>

@@ -4,6 +4,8 @@ import { Document, Model, model, models, Schema, Types } from 'mongoose'
 export interface IOrder extends Document, IOrderInput {
     _id: Types.ObjectId
     isStockAdjusted: boolean
+    isCancelled: boolean
+    cancelledAt?: Date
     createdAt: Date
     updatedAt: Date
 }
@@ -55,6 +57,8 @@ const orderSchema = new Schema<IOrder>(
         isStockAdjusted: { type: Boolean, required: true, default: false },
         isDelivered: { type: Boolean, required: true, default: false },
         deliveredAt: { type: Date },
+        isCancelled: { type: Boolean, required: true, default: false },
+        cancelledAt: { type: Date },
         createdAt: { type: Date, default: Date.now },
     },
     {

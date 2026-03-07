@@ -26,10 +26,23 @@ export async function POST(req: NextRequest) {
         if (order == null) {
             return new NextResponse('Bad Request', { status: 400 })
         }
+        if (order.isCancelled) {
+            return new NextResponse('Cannot pay for a cancelled order', { status: 400 })
+        }
+        if (order.paymentMethod !== 'Stripe') {
+            return new NextResponse('Invalid payment method for this order', { status: 400 })
+        }
         if (order.isPaid) {
             return NextResponse.json({
                 message: 'Order was already marked as paid',
             })
+        }
+        const expectedAmountInCents = Math.round(order.totalPrice * 100)
+        if (pricePaidInCents !== expectedAmountInCents) {
+            return new NextResponse('Stripe payment amount mismatch', { status: 400 })
+        }
+        if ((charge.currency || '').toLowerCase() !== 'aed') {
+            return new NextResponse('Stripe payment currency mismatch', { status: 400 })
         }
 
         order.isPaid = true

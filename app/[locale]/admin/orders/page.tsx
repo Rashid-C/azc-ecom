@@ -46,6 +46,7 @@ export default async function OrdersPage(props: {
               <TableHead>Total</TableHead>
               <TableHead>Paid</TableHead>
               <TableHead>Delivered</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -72,6 +73,17 @@ export default async function OrdersPage(props: {
                   {order.isDelivered && order.deliveredAt
                     ? formatDateTime(order.deliveredAt).dateTime
                     : 'No'}
+                </TableCell>
+                <TableCell>
+                  {order.isCancelled ? (
+                    <span className='text-red-600 font-medium'>Cancelled</span>
+                  ) : order.isDelivered ? (
+                    <span className='text-emerald-600 font-medium'>Delivered</span>
+                  ) : order.isPaid ? (
+                    <span className='text-blue-600 font-medium'>Paid</span>
+                  ) : (
+                    <span className='text-amber-600 font-medium'>Pending</span>
+                  )}
                 </TableCell>
                 <TableCell className='flex gap-1'>
                   <Button asChild variant='outline' size='sm'>

@@ -14,13 +14,32 @@ import { z } from 'zod'
 import { getSetting } from './setting.actions'
 import { requireAdmin } from '../auth-guard'
 import { sendPasswordResetEmail } from '@/emails'
-import { headers } from 'next/headers'
 
 const BCRYPT_SALT_ROUNDS = (() => {
   const fromEnv = Number(process.env.BCRYPT_SALT_ROUNDS)
   if (Number.isFinite(fromEnv) && fromEnv >= 10) return fromEnv
   return 12
 })()
+
+const hashResetToken = (token: string) =>
+  crypto.createHash('sha256').update(token).digest('hex')
+
+const getTrustedSiteUrl = (fallbackUrl: string) => {
+  const configuredUrl =
+    process.env.APP_URL ||
+    process.env.NEXTAUTH_URL ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    fallbackUrl
+
+  const normalized = configuredUrl?.trim()
+  if (!normalized) return fallbackUrl
+
+  try {
+    return new URL(normalized).toString().replace(/\/$/, '')
+  } catch {
+    return fallbackUrl
+  }
+}
 
 // CREATE
 export async function registerUser(userSignUp: IUserSignUp) {
@@ -198,19 +217,15 @@ export async function requestPasswordReset(email: string) {
     }
 
     const token = crypto.randomBytes(32).toString('hex')
+    const tokenHash = hashResetToken(token)
     const expires = new Date(Date.now() + 1000 * 60 * 60) // 1 hour
 
-    user.resetPasswordToken = token
+    user.resetPasswordToken = tokenHash
     user.resetPasswordExpires = expires
     await user.save()
 
     const { site } = await getSetting()
-    // Use the actual request origin so the link works on any environment (localhost, staging, production)
-    const headersList = await headers()
-    const origin =
-      headersList.get('origin') ||
-      headersList.get('x-forwarded-proto') + '://' + headersList.get('host') ||
-      site.url
+    const origin = getTrustedSiteUrl(site.url)
 
     await sendPasswordResetEmail({
       to: user.email,
@@ -234,9 +249,13 @@ export async function resetPassword(token: string, newPassword: string) {
     }
 
     await connectToDatabase()
+    const tokenHash = hashResetToken(token)
     const user = await User.findOne({
-      resetPasswordToken: token,
       resetPasswordExpires: { $gt: new Date() },
+      $or: [
+        { resetPasswordToken: tokenHash }, // new secure format
+        { resetPasswordToken: token }, // backward compatibility for already-issued links
+      ],
     })
 
     if (!user) {

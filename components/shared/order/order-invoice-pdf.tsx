@@ -55,6 +55,7 @@ export default function OrderInvoicePdf({
       const border: [number,number,number] = [229, 231, 235]  // gray-200
       const green:  [number,number,number] = [21, 128, 61]
       const orange: [number,number,number] = [194, 65, 12]
+      const red:    [number,number,number] = [185, 28, 28]
       const white:  [number,number,number] = [255, 255, 255]
 
       // ══════════════════════════════════════════════════════
@@ -112,8 +113,12 @@ export default function OrderInvoicePdf({
       doc.setFontSize(8)
       doc.setTextColor(...gray)
       doc.text('Status', metaLX, my)
-      const statusText = order.isPaid ? 'PAID' : 'UNPAID'
-      const statusColor: [number,number,number] = order.isPaid ? green : orange
+      const statusText = order.isCancelled
+        ? `CANCELLED${order.cancelledAt ? ` ${fmtDate(order.cancelledAt)}` : ''}`
+        : order.isPaid
+          ? 'PAID'
+          : 'UNPAID'
+      const statusColor: [number,number,number] = order.isCancelled ? red : order.isPaid ? green : orange
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(8)
       doc.setTextColor(...statusColor)
@@ -170,8 +175,24 @@ export default function OrderInvoicePdf({
       const orderMeta: [string, string, [number,number,number]?][] = [
         ['Order Date',  fmtDate(order.createdAt)],
         ['Expected',    order.expectedDeliveryDate ? fmtDate(order.expectedDeliveryDate) : '—'],
-        ['Delivery',    order.isDelivered ? `Delivered ${fmtDate(order.deliveredAt!)}` : 'Pending', order.isDelivered ? green : orange],
-        ['Payment',     order.isPaid ? `Paid ${fmtDate(order.paidAt!)}` : 'Pending', order.isPaid ? green : orange],
+        [
+          'Delivery',
+          order.isCancelled
+            ? `Cancelled${order.cancelledAt ? ` ${fmtDate(order.cancelledAt)}` : ''}`
+            : order.isDelivered
+              ? `Delivered ${fmtDate(order.deliveredAt!)}`
+              : 'Pending',
+          order.isCancelled ? red : order.isDelivered ? green : orange,
+        ],
+        [
+          'Payment',
+          order.isCancelled
+            ? 'Cancelled'
+            : order.isPaid
+              ? `Paid ${fmtDate(order.paidAt!)}`
+              : 'Pending',
+          order.isCancelled ? red : order.isPaid ? green : orange,
+        ],
       ]
 
       let omy = boxTop + 14
