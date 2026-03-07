@@ -15,6 +15,7 @@ const settingSchema = new Schema<ISetting>(
       freeShippingMinPrice: { type: Number, required: true, default: 0 },
       defaultTheme: { type: String, required: true, default: 'light' },
       defaultColor: { type: String, required: true, default: 'gold' },
+      taxRate: { type: Number, required: true, default: 0.05 },
     },
     site: {
       name: { type: String, required: true },

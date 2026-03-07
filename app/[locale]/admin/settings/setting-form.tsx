@@ -23,6 +23,14 @@ const SettingForm = ({ setting }: { setting: ISettingInput }) => {
     resolver: zodResolver(SettingInputSchema) as Resolver<ISettingInput>,
     defaultValues: {
       ...setting,
+      common: {
+        pageSize: setting?.common?.pageSize ?? 9,
+        isMaintenanceMode: setting?.common?.isMaintenanceMode ?? false,
+        freeShippingMinPrice: setting?.common?.freeShippingMinPrice ?? 0,
+        defaultTheme: setting?.common?.defaultTheme ?? 'light',
+        defaultColor: setting?.common?.defaultColor ?? 'gold',
+        taxRate: setting?.common?.taxRate ?? 0.05,
+      },
       site: {
         name: setting?.site?.name ?? '',
         url: setting?.site?.url ?? '',

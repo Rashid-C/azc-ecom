@@ -286,6 +286,11 @@ export const SettingInputSchema = z.object({
       .string()
       .min(1, 'Default color is required')
       .default('gold'),
+    taxRate: z.coerce
+      .number()
+      .min(0, 'Tax rate must be at least 0')
+      .max(1, 'Tax rate must be at most 1 (use decimal, e.g. 0.05 for 5%)')
+      .default(0.05),
   }),
   site: z.object({
     name: z.string().min(1, 'Name is required'),

@@ -1261,6 +1261,7 @@ We also provide helpful resources such as order tracking, product guides, and FA
         defaultTheme: 'Light',
         defaultColor: 'Gold',
         pageSize: 9,
+        taxRate: 0.05,
       },
       site: {
         name: 'NxtAmzn',

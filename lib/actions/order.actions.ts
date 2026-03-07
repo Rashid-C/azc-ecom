@@ -444,7 +444,8 @@ export const calcDeliveryDateAndPrice = async ({
   items: OrderItem[]
   shippingAddress?: ShippingAddress
 }) => {
-  const { availableDeliveryDates } = await getSetting()
+  const { availableDeliveryDates, common } = await getSetting()
+  const taxRate = common?.taxRate ?? 0.05
   const itemsPrice = round2(
     items.reduce((acc, item) => acc + item.price * item.quantity, 0)
   )
@@ -463,7 +464,7 @@ export const calcDeliveryDateAndPrice = async ({
         ? 0
         : deliveryDate.shippingPrice
 
-  const taxPrice = !shippingAddress ? undefined : round2(itemsPrice * 0.15)
+  const taxPrice = !shippingAddress ? undefined : round2(itemsPrice * taxRate)
   const totalPrice = round2(
     itemsPrice +
       (shippingPrice ? round2(shippingPrice) : 0) +
@@ -509,6 +510,7 @@ export async function getOrderSummary(date: DateRange) {
   const totalSalesResult = await Order.aggregate([
     {
       $match: {
+        isPaid: true,
         createdAt: {
           $gte: date.from,
           $lte: date.to,
@@ -534,6 +536,7 @@ export async function getOrderSummary(date: DateRange) {
   const monthlySales = await Order.aggregate([
     {
       $match: {
+        isPaid: true,
         createdAt: {
           $gte: sixMonthEarlierDate,
         },
@@ -583,6 +586,7 @@ async function getSalesChartData(date: DateRange) {
   const result = await Order.aggregate([
     {
       $match: {
+        isPaid: true,
         createdAt: {
           $gte: date.from,
           $lte: date.to,
@@ -624,6 +628,7 @@ async function getTopSalesProducts(date: DateRange) {
   const result = await Order.aggregate([
     {
       $match: {
+        isPaid: true,
         createdAt: {
           $gte: date.from,
           $lte: date.to,
@@ -675,6 +680,7 @@ async function getTopSalesCategories(date: DateRange, limit = 5) {
   const result = await Order.aggregate([
     {
       $match: {
+        isPaid: true,
         createdAt: {
           $gte: date.from,
           $lte: date.to,

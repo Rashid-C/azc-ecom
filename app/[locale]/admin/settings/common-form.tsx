@@ -24,7 +24,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { COLORS, THEMES } from '@/lib/constants'
 import { ISettingInput } from '@/types'
-import { Palette, SettingsIcon, ShieldAlert, Truck } from 'lucide-react'
+import { Palette, ReceiptText, SettingsIcon, ShieldAlert, Truck } from 'lucide-react'
 import { UseFormReturn } from 'react-hook-form'
 
 export default function CommonForm({
@@ -78,6 +78,34 @@ export default function CommonForm({
                   <FormControl>
                     <Input placeholder='e.g. 100' {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Tax / VAT */}
+        <div>
+          <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5'>
+            <ReceiptText className='h-3.5 w-3.5' />
+            Tax / VAT
+          </p>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <FormField
+              control={control}
+              name='common.taxRate'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>VAT Rate (decimal)</FormLabel>
+                  <FormControl>
+                    <Input placeholder='e.g. 0.05 for 5%' {...field} />
+                  </FormControl>
+                  <p className='text-xs text-muted-foreground'>
+                    Enter as decimal: 0.05 = 5%, 0.15 = 15%
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
