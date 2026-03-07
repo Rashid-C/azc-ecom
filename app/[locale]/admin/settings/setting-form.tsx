@@ -13,7 +13,7 @@ import PaymentMethodForm from './payment-method-form'
 import DeliveryDateForm from './delivery-date-form'
 import CommonForm from './common-form'
 import CarouselForm from './carousel-form'
-import LanguageForm from './app/[locale]/admin/settings/language-form'
+import LanguageForm from './language-form'
 import SiteInfoForm from './site-info-form'
 
 const SettingForm = ({ setting }: { setting: ISettingInput }) => {
