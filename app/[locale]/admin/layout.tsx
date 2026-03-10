@@ -30,7 +30,7 @@ export default async function AdminLayout({
             className='flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity'
           >
             <Image
-              src='/icons/logo.svg'
+              src={site.logo || '/icons/logo.svg'}
               width={34}
               height={34}
               alt={`${site.name} logo`}

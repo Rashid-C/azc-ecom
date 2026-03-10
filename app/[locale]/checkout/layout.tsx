@@ -18,8 +18,8 @@ export default async function CheckoutLayout({
         <div className='max-w-6xl mx-auto flex justify-between items-center'>
           <Link href='/'>
             <Image
-              src='/icons/logo.svg'
-              alt='logo'
+              src={site.logo || '/icons/logo.svg'}
+              alt={`${site.name} logo`}
               width={70}
               height={70}
               style={{

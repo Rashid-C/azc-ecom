@@ -15,8 +15,8 @@ export default async function AuthLayout({
         <Link href='/' className='flex flex-col items-center gap-2 group'>
           <div className='rounded-2xl p-2 transition-transform group-hover:scale-105'>
             <Image
-              src='/icons/logo.svg'
-              alt='logo'
+              src={site.logo || '/icons/logo.svg'}
+              alt={`${site.name} logo`}
               width={56}
               height={56}
               priority

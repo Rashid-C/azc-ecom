@@ -26,10 +26,11 @@ export default async function Header() {
             className='flex items-center gap-2 header-button font-extrabold text-xl shrink-0'
           >
             <Image
-              src={site.logo}
+              src={site.logo || '/icons/logo.svg'}
               alt={`${site.name} logo`}
-              width={40}
-              height={40}
+              width={56}
+              height={56}
+              className='h-12 w-auto sm:h-14'
             />
             <span className='hidden sm:inline'>{site.name}</span>
           </Link>
