@@ -13,19 +13,19 @@ const initialState: Cart = {
     paymentMethod: undefined,
     shippingAddress: undefined,
     deliveryDateIndex: undefined,
+    fulfillmentMethod: 'store-pickup',
 }
 
 interface CartState {
     cart: Cart
     addItem: (item: OrderItem, quantity: number) => Promise<string>
-
     updateItem: (item: OrderItem, quantity: number) => Promise<void>
     removeItem: (item: OrderItem) => void
     clearCart: () => void
     setShippingAddress: (shippingAddress: ShippingAddress) => Promise<void>
     setPaymentMethod: (paymentMethod: string) => void
     setDeliveryDateIndex: (index: number) => Promise<void>
-
+    setFulfillmentMethod: (method: 'store-pickup' | 'home-delivery') => Promise<void>
 }
 
 const useCartStore = create(
@@ -34,7 +34,7 @@ const useCartStore = create(
             cart: initialState,
 
             addItem: async (item: OrderItem, quantity: number) => {
-                const { items, shippingAddress } = get().cart
+                const { items, shippingAddress, fulfillmentMethod } = get().cart
                 const existItem = items.find(
                     (x) =>
                         x.product === item.product &&
@@ -69,6 +69,7 @@ const useCartStore = create(
                         ...(await calcDeliveryDateAndPrice({
                             items: updatedCartItems,
                             shippingAddress,
+                            fulfillmentMethod,
                         })),
                     },
                 })
@@ -85,7 +86,7 @@ const useCartStore = create(
             },
 
             updateItem: async (item: OrderItem, quantity: number) => {
-                const { items, shippingAddress } = get().cart
+                const { items, shippingAddress, fulfillmentMethod } = get().cart
                 const exist = items.find(
                     (x) =>
                         x.product === item.product &&
@@ -107,12 +108,13 @@ const useCartStore = create(
                         ...(await calcDeliveryDateAndPrice({
                             items: updatedCartItems,
                             shippingAddress,
+                            fulfillmentMethod,
                         })),
                     },
                 })
             },
             removeItem: async (item: OrderItem) => {
-                const { items, shippingAddress } = get().cart
+                const { items, shippingAddress, fulfillmentMethod } = get().cart
                 const updatedCartItems = items.filter(
                     (x) =>
                         x.product !== item.product ||
@@ -126,13 +128,14 @@ const useCartStore = create(
                         ...(await calcDeliveryDateAndPrice({
                             items: updatedCartItems,
                             shippingAddress,
+                            fulfillmentMethod,
                         })),
                     },
                 })
             },
 
             setShippingAddress: async (shippingAddress: ShippingAddress) => {
-                const { items } = get().cart
+                const { items, fulfillmentMethod } = get().cart
                 set({
                     cart: {
                         ...get().cart,
@@ -140,6 +143,7 @@ const useCartStore = create(
                         ...(await calcDeliveryDateAndPrice({
                             items,
                             shippingAddress,
+                            fulfillmentMethod,
                         })),
                     },
                 })
@@ -153,7 +157,7 @@ const useCartStore = create(
                 })
             },
             setDeliveryDateIndex: async (index: number) => {
-                const { items, shippingAddress } = get().cart
+                const { items, shippingAddress, fulfillmentMethod } = get().cart
 
                 set({
                     cart: {
@@ -162,6 +166,22 @@ const useCartStore = create(
                             items,
                             shippingAddress,
                             deliveryDateIndex: index,
+                            fulfillmentMethod,
+                        })),
+                    },
+                })
+            },
+            setFulfillmentMethod: async (method: 'store-pickup' | 'home-delivery') => {
+                const { items, shippingAddress, deliveryDateIndex } = get().cart
+                set({
+                    cart: {
+                        ...get().cart,
+                        fulfillmentMethod: method,
+                        ...(await calcDeliveryDateAndPrice({
+                            items,
+                            shippingAddress,
+                            deliveryDateIndex,
+                            fulfillmentMethod: method,
                         })),
                     },
                 })

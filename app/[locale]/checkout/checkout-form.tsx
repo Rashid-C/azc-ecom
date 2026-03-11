@@ -39,6 +39,14 @@ import Link from 'next/link'
 import useCartStore from '@/hooks/use-cart-store'
 import useSettingStore from '@/hooks/use-setting-store'
 import ProductPrice from '@/components/shared/product/product-price'
+import { MapPin, Phone, Mail, Store } from 'lucide-react'
+import { z } from 'zod'
+
+const PickupDetailsSchema = z.object({
+  fullName: z.string().min(1, 'Full name is required'),
+  phone: z.string().min(1, 'Phone number is required'),
+})
+type PickupDetails = z.infer<typeof PickupDetailsSchema>
 
 const shippingAddressDefaultValues =
   process.env.NODE_ENV === 'development'
@@ -83,6 +91,7 @@ const CheckoutForm = () => {
       shippingAddress,
       deliveryDateIndex,
       paymentMethod = defaultPaymentMethod,
+      fulfillmentMethod,
     },
     setShippingAddress,
     setPaymentMethod,
@@ -92,6 +101,7 @@ const CheckoutForm = () => {
     setDeliveryDateIndex,
   } = useCartStore()
   const isMounted = useIsMounted()
+  const isStorePickup = fulfillmentMethod === 'store-pickup'
 
   const shippingAddressForm = useForm<ShippingAddress>({
     resolver: zodResolver(ShippingAddressSchema),
@@ -100,6 +110,24 @@ const CheckoutForm = () => {
   const onSubmitShippingAddress: SubmitHandler<ShippingAddress> = (values) => {
     setShippingAddress(values)
     setIsAddressSelected(true)
+  }
+
+  const pickupDetailsForm = useForm<PickupDetails>({
+    resolver: zodResolver(PickupDetailsSchema),
+    defaultValues: { fullName: '', phone: '' },
+  })
+  const onSubmitPickupDetails: SubmitHandler<PickupDetails> = (values) => {
+    setShippingAddress({
+      fullName: values.fullName,
+      phone: values.phone,
+      street: 'Store Pickup',
+      city: site.name,
+      postalCode: 'N/A',
+      province: 'N/A',
+      country: 'UAE',
+    })
+    setIsAddressSelected(true)
+    setIsDeliveryDateSelected(true)
   }
 
   useEffect(() => {
@@ -120,18 +148,22 @@ const CheckoutForm = () => {
     useState<boolean>(false)
 
   const handlePlaceOrder = async () => {
+    const expectedDeliveryDate = isStorePickup
+      ? calculateFutureDate(1)
+      : calculateFutureDate(
+          availableDeliveryDates[deliveryDateIndex!].daysToDeliver
+        )
     const res = await createOrder({
       items,
       shippingAddress,
-      expectedDeliveryDate: calculateFutureDate(
-        availableDeliveryDates[deliveryDateIndex!].daysToDeliver
-      ),
+      expectedDeliveryDate,
       deliveryDateIndex,
       paymentMethod,
       itemsPrice,
       shippingPrice,
       taxPrice,
       totalPrice,
+      fulfillmentMethod: fulfillmentMethod ?? 'home-delivery',
     })
     if (!res.success) {
       toast({
@@ -152,7 +184,11 @@ const CheckoutForm = () => {
     setIsPaymentMethodSelected(true)
   }
   const handleSelectShippingAddress = () => {
-    shippingAddressForm.handleSubmit(onSubmitShippingAddress)()
+    if (isStorePickup) {
+      pickupDetailsForm.handleSubmit(onSubmitPickupDetails)()
+    } else {
+      shippingAddressForm.handleSubmit(onSubmitShippingAddress)()
+    }
   }
   const CheckoutSummary = () => (
     <Card>
@@ -250,35 +286,123 @@ const CheckoutForm = () => {
     <main className='max-w-6xl mx-auto highlight-link'>
       <div className='grid md:grid-cols-4 gap-6'>
         <div className='md:col-span-3'>
-          {/* shipping address */}
+          {/* shipping address / pickup details */}
           <div>
             {isAddressSelected && shippingAddress ? (
               <div className='grid grid-cols-1 md:grid-cols-12    my-3  pb-3'>
                 <div className='col-span-5 flex text-lg font-bold '>
                   <span className='w-8'>1 </span>
-                  <span>Shipping address</span>
+                  <span>{isStorePickup ? 'Pickup Details' : 'Shipping address'}</span>
                 </div>
                 <div className='col-span-5 '>
-                  <p>
-                    {shippingAddress.fullName} <br />
-                    {shippingAddress.street} <br />
-                    {`${shippingAddress.city}, ${shippingAddress.province}, ${shippingAddress.postalCode}, ${shippingAddress.country}`}
-                  </p>
+                  {isStorePickup ? (
+                    <div className='space-y-1'>
+                      <p className='font-semibold'>{shippingAddress.fullName}</p>
+                      <p className='text-sm text-muted-foreground'>{shippingAddress.phone}</p>
+                      <p className='text-sm text-green-700 font-medium'>Store Pickup — FREE</p>
+                    </div>
+                  ) : (
+                    <p>
+                      {shippingAddress.fullName} <br />
+                      {shippingAddress.street} <br />
+                      {`${shippingAddress.city}, ${shippingAddress.province}, ${shippingAddress.postalCode}, ${shippingAddress.country}`}
+                    </p>
+                  )}
                 </div>
                 <div className='col-span-2'>
                   <Button
                     variant={'outline'}
                     onClick={() => {
                       setIsAddressSelected(false)
-                      setIsPaymentMethodSelected(true)
-                      setIsDeliveryDateSelected(true)
+                      setIsPaymentMethodSelected(false)
+                      setIsDeliveryDateSelected(false)
                     }}
                   >
                     Change
                   </Button>
                 </div>
               </div>
+            ) : isStorePickup ? (
+              /* ── Store Pickup: ask only name + phone ── */
+              <>
+                <div className='flex text-primary text-lg font-bold my-2'>
+                  <span className='w-8'>1 </span>
+                  <span>Pickup Details</span>
+                </div>
+                {/* Store info box */}
+                <Card className='md:ml-8 my-3 border-green-200 bg-green-50 dark:bg-green-950/20'>
+                  <CardContent className='p-4 space-y-2'>
+                    <div className='flex items-center gap-2 font-semibold text-green-700 dark:text-green-400'>
+                      <Store className='h-4 w-4' />
+                      Collect from Our Store — Zero Delivery Charge
+                    </div>
+                    <div className='space-y-1.5 text-sm text-muted-foreground'>
+                      <div className='flex items-start gap-2'>
+                        <MapPin className='h-3.5 w-3.5 shrink-0 mt-0.5 text-primary' />
+                        <span>{site.address}</span>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Phone className='h-3.5 w-3.5 shrink-0 text-primary' />
+                        <span>{site.phone}</span>
+                      </div>
+                      <div className='flex items-center gap-2'>
+                        <Mail className='h-3.5 w-3.5 shrink-0 text-primary' />
+                        <span>{site.email}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Form {...pickupDetailsForm}>
+                  <form
+                    method='post'
+                    onSubmit={pickupDetailsForm.handleSubmit(onSubmitPickupDetails)}
+                    className='space-y-4'
+                  >
+                    <Card className='md:ml-8 my-4'>
+                      <CardContent className='p-4 space-y-3'>
+                        <div className='text-base font-bold mb-1'>
+                          Your Contact Details
+                        </div>
+                        <div className='flex flex-col gap-4 md:flex-row'>
+                          <FormField
+                            control={pickupDetailsForm.control}
+                            name='fullName'
+                            render={({ field }) => (
+                              <FormItem className='w-full'>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder='Enter your full name' {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={pickupDetailsForm.control}
+                            name='phone'
+                            render={({ field }) => (
+                              <FormItem className='w-full'>
+                                <FormLabel>Phone Number</FormLabel>
+                                <FormControl>
+                                  <Input placeholder='Enter your phone number' {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </CardContent>
+                      <CardFooter className='p-4'>
+                        <Button type='submit' className='rounded-full font-semibold'>
+                          Confirm Pickup
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </form>
+                </Form>
+              </>
             ) : (
+              /* ── Home Delivery: full address form ── */
               <>
                 <div className='flex text-primary text-lg font-bold my-2'>
                   <span className='w-8'>1 </span>
@@ -500,24 +624,28 @@ const CheckoutForm = () => {
           </div>
           {/* items and delivery date */}
           <div>
-            {isDeliveryDateSelected && deliveryDateIndex != undefined ? (
+            {isDeliveryDateSelected && (isStorePickup || deliveryDateIndex != undefined) ? (
               <div className='grid  grid-cols-1 md:grid-cols-12  my-3 pb-3'>
                 <div className='flex text-lg font-bold  col-span-5'>
                   <span className='w-8'>3 </span>
                   <span>Items and shipping</span>
                 </div>
                 <div className='col-span-5'>
-                  <p>
-                    Delivery date:{' '}
-                    {
-                      formatDateTime(
-                        calculateFutureDate(
-                          availableDeliveryDates[deliveryDateIndex]
-                            .daysToDeliver
-                        )
-                      ).dateOnly
-                    }
-                  </p>
+                  {isStorePickup ? (
+                    <p className='text-green-700 font-semibold'>Store Pickup — FREE</p>
+                  ) : (
+                    <p>
+                      Delivery date:{' '}
+                      {
+                        formatDateTime(
+                          calculateFutureDate(
+                            availableDeliveryDates[deliveryDateIndex!]
+                              .daysToDeliver
+                          )
+                        ).dateOnly
+                      }
+                    </p>
+                  )}
                   <ul>
                     {items.map((item, _index) => (
                       <li key={_index}>
@@ -527,15 +655,17 @@ const CheckoutForm = () => {
                   </ul>
                 </div>
                 <div className='col-span-2'>
-                  <Button
-                    variant={'outline'}
-                    onClick={() => {
-                      setIsPaymentMethodSelected(true)
-                      setIsDeliveryDateSelected(false)
-                    }}
-                  >
-                    Change
-                  </Button>
+                  {!isStorePickup && (
+                    <Button
+                      variant={'outline'}
+                      onClick={() => {
+                        setIsPaymentMethodSelected(true)
+                        setIsDeliveryDateSelected(false)
+                      }}
+                    >
+                      Change
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : isPaymentMethodSelected && isAddressSelected ? (
@@ -546,21 +676,33 @@ const CheckoutForm = () => {
                 </div>
                 <Card className='md:ml-8'>
                   <CardContent className='p-4'>
-                    <p className='mb-2'>
-                      <span className='text-lg font-bold text-green-700'>
-                        Arriving{' '}
-                        {
-                          formatDateTime(
-                            calculateFutureDate(
-                              availableDeliveryDates[deliveryDateIndex!]
-                                .daysToDeliver
-                            )
-                          ).dateOnly
-                        }
-                      </span>{' '}
-                      If you order in the next {timeUntilMidnight().hours} hours
-                      and {timeUntilMidnight().minutes} minutes.
-                    </p>
+                    {isStorePickup ? (
+                      <div className='mb-4 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200'>
+                        <p className='text-green-700 dark:text-green-400 font-semibold'>
+                          Store Pickup — Zero Delivery Charge
+                        </p>
+                        <p className='text-sm text-muted-foreground mt-1'>
+                          Your order will be ready for collection. We will
+                          contact you when it is ready.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className='mb-2'>
+                        <span className='text-lg font-bold text-green-700'>
+                          Arriving{' '}
+                          {
+                            formatDateTime(
+                              calculateFutureDate(
+                                availableDeliveryDates[deliveryDateIndex!]
+                                  .daysToDeliver
+                              )
+                            ).dateOnly
+                          }
+                        </span>{' '}
+                        If you order in the next {timeUntilMidnight().hours} hours
+                        and {timeUntilMidnight().minutes} minutes.
+                      </p>
+                    )}
                     <div className='grid md:grid-cols-2 gap-6'>
                       <div>
                         {items.map((item, _index) => (
@@ -614,60 +756,67 @@ const CheckoutForm = () => {
                           </div>
                         ))}
                       </div>
-                      <div>
-                        <div className=' font-bold'>
-                          <p className='mb-2'> Choose a shipping speed:</p>
+                      {!isStorePickup && (
+                        <div>
+                          <div className=' font-bold'>
+                            <p className='mb-2'> Choose a shipping speed:</p>
 
-                          <ul>
-                            <RadioGroup
-                              value={
-                                availableDeliveryDates[deliveryDateIndex!].name
-                              }
-                              onValueChange={(value) =>
-                                setDeliveryDateIndex(
-                                  availableDeliveryDates.findIndex(
-                                    (address) => address.name === value
-                                  )!
-                                )
-                              }
-                            >
-                              {availableDeliveryDates.map((dd) => (
-                                <div key={dd.name} className='flex'>
-                                  <RadioGroupItem
-                                    value={dd.name}
-                                    id={`address-${dd.name}`}
-                                  />
-                                  <Label
-                                    className='pl-2 space-y-2 cursor-pointer'
-                                    htmlFor={`address-${dd.name}`}
-                                  >
-                                    <div className='text-green-700 font-semibold'>
-                                      {
-                                        formatDateTime(
-                                          calculateFutureDate(dd.daysToDeliver)
-                                        ).dateOnly
-                                      }
-                                    </div>
-                                    <div>
-                                      {(dd.freeShippingMinPrice > 0 &&
-                                      itemsPrice >= dd.freeShippingMinPrice
-                                        ? 0
-                                        : dd.shippingPrice) === 0 ? (
-                                        'FREE Shipping'
-                                      ) : (
-                                        <ProductPrice
-                                          price={dd.shippingPrice}
-                                          plain
-                                        />
-                                      )}
-                                    </div>
-                                  </Label>
-                                </div>
-                              ))}
-                            </RadioGroup>
-                          </ul>
+                            <ul>
+                              <RadioGroup
+                                value={
+                                  availableDeliveryDates[deliveryDateIndex!].name
+                                }
+                                onValueChange={(value) =>
+                                  setDeliveryDateIndex(
+                                    availableDeliveryDates.findIndex(
+                                      (address) => address.name === value
+                                    )!
+                                  )
+                                }
+                              >
+                                {availableDeliveryDates.map((dd) => (
+                                  <div key={dd.name} className='flex'>
+                                    <RadioGroupItem
+                                      value={dd.name}
+                                      id={`address-${dd.name}`}
+                                    />
+                                    <Label
+                                      className='pl-2 space-y-2 cursor-pointer'
+                                      htmlFor={`address-${dd.name}`}
+                                    >
+                                      <div className='text-green-700 font-semibold'>
+                                        {
+                                          formatDateTime(
+                                            calculateFutureDate(dd.daysToDeliver)
+                                          ).dateOnly
+                                        }
+                                      </div>
+                                      <div>
+                                        {(dd.freeShippingMinPrice > 0 &&
+                                        itemsPrice >= dd.freeShippingMinPrice
+                                          ? 0
+                                          : dd.shippingPrice) === 0 ? (
+                                          'FREE Shipping'
+                                        ) : (
+                                          <ProductPrice
+                                            price={dd.shippingPrice}
+                                            plain
+                                          />
+                                        )}
+                                      </div>
+                                    </Label>
+                                  </div>
+                                ))}
+                              </RadioGroup>
+                            </ul>
+                          </div>
+                          <p className='text-xs text-blue-700 bg-blue-50 dark:bg-blue-950/20 rounded px-2 py-1.5 mt-3'>
+                            Note: Delivery charge may vary based on your
+                            location. An additional fee may be applied after
+                            purchase.
+                          </p>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -3,6 +3,8 @@ import BrowsingHistoryList from '@/components/shared/browsing-history-list'
 import ProductPrice from '@/components/shared/product/product-price'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Select,
   SelectContent,
@@ -17,12 +19,14 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
+import { MapPin, Phone, Mail, Store, Truck } from 'lucide-react'
 
 export default function CartPage() {
   const {
-    cart: { items, itemsPrice },
+    cart: { items, itemsPrice, fulfillmentMethod },
     updateItem,
     removeItem,
+    setFulfillmentMethod,
   } = useCartStore()
   const router = useRouter()
   const {
@@ -167,27 +171,6 @@ export default function CartPage() {
             <div>
               <Card className='rounded-none'>
                 <CardContent className='py-4 space-y-4'>
-                  {itemsPrice < freeShippingMinPrice ? (
-                    <div className='flex-1'>
-                      {t('Cart.Add')}{' '}
-                      <span className='text-green-700'>
-                        <ProductPrice
-                          price={freeShippingMinPrice - itemsPrice}
-                          plain
-                        />
-                      </span>{' '}
-                      {t(
-                        'Cart.of eligible items to your order to qualify for FREE Shipping'
-                      )}
-                    </div>
-                  ) : (
-                    <div className='flex-1'>
-                      <span className='text-green-700'>
-                        {t('Cart.Your order qualifies for FREE Shipping')}
-                      </span>{' '}
-                      {t('Cart.Choose this option at checkout')}
-                    </div>
-                  )}
                   <div className='text-lg'>
                     {t('Cart.Subtotal')} (
                     {items.reduce((acc, item) => acc + item.quantity, 0)}{' '}
@@ -196,12 +179,104 @@ export default function CartPage() {
                       <ProductPrice price={itemsPrice} plain />
                     </span>{' '}
                   </div>
+
+                  {/* Fulfillment Method Selection */}
+                  <div className='space-y-3'>
+                    <p className='font-semibold text-sm'>
+                      Choose Fulfillment Method
+                    </p>
+                    <RadioGroup
+                      value={fulfillmentMethod ?? ''}
+                      onValueChange={(v) =>
+                        setFulfillmentMethod(
+                          v as 'store-pickup' | 'home-delivery'
+                        )
+                      }
+                      className='space-y-2'
+                    >
+                      {/* Store Pickup */}
+                      <div
+                        className={`border rounded-lg p-3 cursor-pointer transition-colors ${fulfillmentMethod === 'store-pickup' ? 'border-primary bg-primary/5' : 'border-border'}`}
+                      >
+                        <div className='flex items-center gap-2'>
+                          <RadioGroupItem
+                            value='store-pickup'
+                            id='store-pickup'
+                          />
+                          <Label
+                            htmlFor='store-pickup'
+                            className='cursor-pointer flex items-center gap-2 font-semibold'
+                          >
+                            <Store className='h-4 w-4 text-green-600' />
+                            Collect from Store
+                            <span className='text-xs font-normal text-green-600 bg-green-100 px-1.5 py-0.5 rounded-full'>
+                              FREE
+                            </span>
+                          </Label>
+                        </div>
+                        {fulfillmentMethod === 'store-pickup' && (
+                          <div className='mt-3 ml-6 space-y-1.5 text-sm text-muted-foreground'>
+                            <div className='flex items-start gap-2'>
+                              <MapPin className='h-3.5 w-3.5 shrink-0 mt-0.5 text-primary' />
+                              <span>{site.address}</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                              <Phone className='h-3.5 w-3.5 shrink-0 text-primary' />
+                              <span>{site.phone}</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                              <Mail className='h-3.5 w-3.5 shrink-0 text-primary' />
+                              <span>{site.email}</span>
+                            </div>
+                            <p className='text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mt-1'>
+                              Zero delivery charge. Pick up at our store.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Home Delivery */}
+                      <div
+                        className={`border rounded-lg p-3 cursor-pointer transition-colors ${fulfillmentMethod === 'home-delivery' ? 'border-primary bg-primary/5' : 'border-border'}`}
+                      >
+                        <div className='flex items-center gap-2'>
+                          <RadioGroupItem
+                            value='home-delivery'
+                            id='home-delivery'
+                          />
+                          <Label
+                            htmlFor='home-delivery'
+                            className='cursor-pointer flex items-center gap-2 font-semibold'
+                          >
+                            <Truck className='h-4 w-4 text-blue-600' />
+                            Home Delivery
+                          </Label>
+                        </div>
+                        {fulfillmentMethod === 'home-delivery' && (
+                          <div className='mt-2 ml-6'>
+                            <p className='text-xs text-blue-700 bg-blue-50 rounded px-2 py-1'>
+                              Delivery charge varies by location. An additional
+                              delivery fee will be applied based on your address
+                              after purchase.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </RadioGroup>
+                  </div>
+
                   <Button
                     onClick={() => router.push('/checkout')}
-                    className='rounded-full w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold'
+                    disabled={!fulfillmentMethod}
+                    className='rounded-full w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold disabled:opacity-50'
                   >
                     {t('Cart.Proceed to Checkout')}
                   </Button>
+                  {!fulfillmentMethod && (
+                    <p className='text-xs text-center text-muted-foreground'>
+                      Please select a fulfillment method to continue.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>

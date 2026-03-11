@@ -141,6 +141,7 @@ export const OrderInputSchema = z.object({
   deliveredAt: z.date().optional(),
   isPaid: z.boolean().default(false),
   paidAt: z.date().optional(),
+  fulfillmentMethod: z.enum(['store-pickup', 'home-delivery']).default('home-delivery'),
 })
 
 // Cart
@@ -158,6 +159,7 @@ export const CartSchema = z.object({
   shippingAddress: z.optional(ShippingAddressSchema),
   deliveryDateIndex: z.optional(z.number()),
   expectedDeliveryDate: z.optional(z.date()),
+  fulfillmentMethod: z.enum(['store-pickup', 'home-delivery']).optional(),
 })
 
 

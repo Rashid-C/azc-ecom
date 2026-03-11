@@ -170,6 +170,7 @@ const generateOrder = async (
     deliveredAt: calculatePastDate(i),
     createdAt: calculatePastDate(i),
     expectedDeliveryDate: calculateFutureDate(i % 2),
+    fulfillmentMethod: 'home-delivery' as const,
     ...calcDeliveryDateAndPriceForSeed({
       items: items,
       shippingAddress: data.users[i % users.length].address,

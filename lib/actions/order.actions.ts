@@ -46,10 +46,11 @@ export const createOrderFromCart = async (
 
   const cart = {
     ...clientSideCart,
-    ...calcDeliveryDateAndPrice({
+    ...await calcDeliveryDateAndPrice({
       items: trustedItems,
       shippingAddress: clientSideCart.shippingAddress,
       deliveryDateIndex: clientSideCart.deliveryDateIndex,
+      fulfillmentMethod: clientSideCart.fulfillmentMethod,
     }),
   }
 
@@ -63,6 +64,7 @@ export const createOrderFromCart = async (
     taxPrice: cart.taxPrice,
     totalPrice: cart.totalPrice,
     expectedDeliveryDate: cart.expectedDeliveryDate,
+    fulfillmentMethod: clientSideCart.fulfillmentMethod ?? 'home-delivery',
   })
   return await Order.create(order)
 }
@@ -439,10 +441,12 @@ export const calcDeliveryDateAndPrice = async ({
   items,
   shippingAddress,
   deliveryDateIndex,
+  fulfillmentMethod,
 }: {
   deliveryDateIndex?: number
   items: OrderItem[]
   shippingAddress?: ShippingAddress
+  fulfillmentMethod?: 'store-pickup' | 'home-delivery'
 }) => {
   const { availableDeliveryDates, common } = await getSetting()
   const taxRate = common?.taxRate ?? 0.05
@@ -450,24 +454,32 @@ export const calcDeliveryDateAndPrice = async ({
     items.reduce((acc, item) => acc + item.price * item.quantity, 0)
   )
 
+  const isStorePickup = fulfillmentMethod === 'store-pickup'
+
   const deliveryDate =
     availableDeliveryDates[
       deliveryDateIndex === undefined
         ? availableDeliveryDates.length - 1
         : deliveryDateIndex
     ]
-  const shippingPrice =
-    !shippingAddress || !deliveryDate
+
+  const shippingPrice = isStorePickup
+    ? 0
+    : !shippingAddress || !deliveryDate
       ? undefined
       : deliveryDate.freeShippingMinPrice > 0 &&
           itemsPrice >= deliveryDate.freeShippingMinPrice
         ? 0
         : deliveryDate.shippingPrice
 
-  const taxPrice = !shippingAddress ? undefined : round2(itemsPrice * taxRate)
+  const taxPrice =
+    !shippingAddress && !isStorePickup
+      ? undefined
+      : round2(itemsPrice * taxRate)
+
   const totalPrice = round2(
     itemsPrice +
-      (shippingPrice ? round2(shippingPrice) : 0) +
+      (shippingPrice !== undefined ? round2(shippingPrice) : 0) +
       (taxPrice ? round2(taxPrice) : 0)
   )
   return {

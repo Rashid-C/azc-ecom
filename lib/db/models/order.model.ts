@@ -50,6 +50,7 @@ const orderSchema = new Schema<IOrder>(
         shippingPrice: { type: Number, required: true },
         taxPrice: { type: Number, required: true },
         totalPrice: { type: Number, required: true },
+        fulfillmentMethod: { type: String, enum: ['store-pickup', 'home-delivery'], default: 'home-delivery' },
         isPaid: { type: Boolean, required: true, default: false },
         paidAt: { type: Date },
         isStockAdjusted: { type: Boolean, required: true, default: false },

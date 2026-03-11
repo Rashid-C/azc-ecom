@@ -129,7 +129,7 @@ export default function OrderInvoicePdf({
       // ══════════════════════════════════════════════════════
       const boxTop   = ruleY + 6
       const halfW    = CW / 2 - 3
-      const boxH     = 36
+      const boxH     = 42
 
       // LEFT: Bill To
       doc.setFillColor(...grayL)
@@ -167,8 +167,10 @@ export default function OrderInvoicePdf({
       doc.setTextColor(...blue)
       doc.text('ORDER DETAILS', rightBoxX + 5, boxTop + 7)
 
+      const isStorePickup = order.fulfillmentMethod === 'store-pickup'
       const orderMeta: [string, string, [number,number,number]?][] = [
         ['Order Date',  fmtDate(order.createdAt)],
+        ['Fulfillment', isStorePickup ? 'Store Pickup (FREE)' : 'Home Delivery', isStorePickup ? green : undefined],
         ['Expected',    order.expectedDeliveryDate ? fmtDate(order.expectedDeliveryDate) : '—'],
         ['Delivery',    order.isDelivered ? `Delivered ${fmtDate(order.deliveredAt!)}` : 'Pending', order.isDelivered ? green : orange],
         ['Payment',     order.isPaid ? `Paid ${fmtDate(order.paidAt!)}` : 'Pending', order.isPaid ? green : orange],
