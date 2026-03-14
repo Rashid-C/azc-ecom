@@ -46,8 +46,8 @@ export default function WhatsAppButton({
 
         .wa-wrap {
           position: fixed;
-          bottom: 12px;
-          right: 24px;
+          bottom: 8px;
+          right: 96px;
           z-index: 9999;
           display: flex;
           align-items: center;
@@ -117,8 +117,8 @@ export default function WhatsAppButton({
 
         @media (max-width: 640px) {
           .wa-wrap {
-            bottom: 10px;
-            right: 16px;
+            bottom: 8px;
+            right: 88px;
           }
           .wa-btn {
             width: 52px;
