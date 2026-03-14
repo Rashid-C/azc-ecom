@@ -46,13 +46,22 @@ export default function WhatsAppButton({
 
         .wa-wrap {
           position: fixed;
-          bottom: 8px;
-          right: 96px;
+          bottom: 86px;
+          right: 16px;
           z-index: 9999;
           display: flex;
           align-items: center;
           gap: 10px;
+          transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
           animation: wa-bounce-in 0.65s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+
+        body.ai-chat-open .wa-wrap {
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(8px);
         }
 
         .wa-label {
@@ -117,8 +126,8 @@ export default function WhatsAppButton({
 
         @media (max-width: 640px) {
           .wa-wrap {
-            bottom: 8px;
-            right: 88px;
+            bottom: 80px;
+            right: 12px;
           }
           .wa-btn {
             width: 52px;
