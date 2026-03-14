@@ -3,6 +3,7 @@ import React from 'react'
 import Header from '@/components/shared/header'
 import Footer from '@/components/shared/footer'
 import WhatsAppButton from '@/components/shared/whatsapp-button'
+import TawkWidget from '@/components/shared/tawk-widget'
 import { getSetting } from '@/lib/actions/setting.actions'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
@@ -27,6 +28,7 @@ export default async function RootLayout({
       <main className='flex-1 flex flex-col p-2 sm:p-4 w-full overflow-x-hidden'>{children}</main>
       <Footer />
       <WhatsAppButton phone={setting.site.phone} />
+      <TawkWidget />
     </div>
   )
 }
