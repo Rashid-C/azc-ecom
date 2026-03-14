@@ -2,16 +2,15 @@
 
 import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import {
   ArrowUpRight,
-  Bot,
   LoaderCircle,
   MessageSquare,
   SendHorizonal,
   Sparkles,
-  Stars,
   X,
   Zap,
 } from 'lucide-react'
@@ -190,38 +189,43 @@ export default function AiChatWidget() {
   return (
     <div className='fixed right-3 bottom-3 z-[10000] sm:right-4 sm:bottom-4'>
       {isOpen ? (
-        <div className='relative flex h-[min(78vh,42rem)] w-[min(calc(100vw-1rem),25rem)] flex-col overflow-hidden rounded-[1.75rem] border border-slate-200/80 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.28)] ring-1 ring-slate-950/5 backdrop-blur sm:w-[25rem]'>
-          <div className='pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,#7dd3fc_0%,rgba(125,211,252,0.28)_32%,transparent_70%)] opacity-80' />
+        <div className='relative flex h-[min(76vh,40rem)] w-[min(calc(100vw-1rem),24rem)] flex-col overflow-hidden rounded-[1.6rem] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.2)] ring-1 ring-slate-950/5 backdrop-blur sm:w-[24rem]'>
+          <div className='pointer-events-none absolute inset-x-0 top-0 h-20 bg-[radial-gradient(circle_at_top,#7dd3fc_0%,rgba(125,211,252,0.2)_28%,transparent_70%)] opacity-80' />
 
-          <div className='relative overflow-hidden border-b border-slate-200/70 bg-[linear-gradient(145deg,#071120_0%,#10284a_45%,#0d4b77_100%)] px-4 py-4 text-white'>
-            <div className='absolute -top-10 right-0 h-28 w-28 rounded-full bg-cyan-300/20 blur-2xl' />
-            <div className='absolute bottom-0 left-6 h-16 w-16 rounded-full bg-sky-400/10 blur-2xl' />
+          <div className='relative overflow-hidden border-b border-slate-200/70 bg-[linear-gradient(145deg,#08111f_0%,#112845_55%,#0e456e_100%)] px-4 py-3 text-white'>
+            <div className='absolute -top-10 right-0 h-24 w-24 rounded-full bg-cyan-300/15 blur-2xl' />
+            <div className='absolute bottom-0 left-6 h-12 w-12 rounded-full bg-sky-400/10 blur-2xl' />
 
             <div className='relative flex items-start justify-between gap-3'>
-              <div className='min-w-0 space-y-3'>
-                <div className='flex items-center gap-2'>
-                  <div className='rounded-2xl bg-white/10 p-2 ring-1 ring-white/15 backdrop-blur'>
-                    <Stars className='size-4 text-cyan-200' />
+              <div className='min-w-0 space-y-2'>
+                <div className='flex items-center gap-2.5'>
+                  <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur'>
+                    <Image
+                      src='/icons/azclogo.svg'
+                      alt='AZC logo'
+                      width={28}
+                      height={28}
+                      className='h-7 w-7 object-contain'
+                    />
                   </div>
-                  <Badge className='rounded-full border-0 bg-white/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100 hover:bg-white/12'>
-                    Live Catalog AI
+                  <div className='min-w-0'>
+                    <h3 className='text-[15px] font-semibold tracking-tight'>
+                      AZC Shopping Assistant
+                    </h3>
+                    <p className='text-xs text-white/72'>
+                      Product help and smart recommendations
+                    </p>
+                  </div>
+                  <Badge className='ml-auto rounded-full border-0 bg-emerald-400/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100 hover:bg-emerald-400/15'>
+                    Online
                   </Badge>
                 </div>
-                <div>
-                  <h3 className='text-lg font-semibold tracking-tight'>
-                    AZC Shopping Assistant
-                  </h3>
-                  <p className='mt-1 max-w-[18rem] text-sm leading-5 text-white/78'>
-                    Ask for product ideas, compare options, or find the best match
-                    in your store inventory.
-                  </p>
-                </div>
-                <div className='flex flex-wrap gap-2 text-xs text-cyan-100/90'>
-                  <div className='rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10'>
-                    Fast recommendations
+                <div className='flex flex-wrap gap-2 text-[11px] text-cyan-100/90'>
+                  <div className='rounded-full bg-white/10 px-2.5 py-1 ring-1 ring-white/10'>
+                    Fast
                   </div>
-                  <div className='rounded-full bg-white/10 px-3 py-1.5 ring-1 ring-white/10'>
-                    Stock-aware answers
+                  <div className='rounded-full bg-white/10 px-2.5 py-1 ring-1 ring-white/10'>
+                    Stock-aware
                   </div>
                 </div>
               </div>
@@ -239,10 +243,10 @@ export default function AiChatWidget() {
             </div>
           </div>
 
-          <ScrollArea className='min-h-0 flex-1 bg-[linear-gradient(180deg,#f4fbff_0%,#ffffff_28%,#f8fafc_100%)]'>
-            <div ref={viewportRef} className='space-y-5 p-4'>
-              <div className='rounded-[1.35rem] border border-cyan-100 bg-white/85 p-3 shadow-[0_12px_28px_rgba(14,165,233,0.08)] backdrop-blur'>
-                <div className='mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-700'>
+          <ScrollArea className='min-h-0 flex-1 bg-[linear-gradient(180deg,#f7fbff_0%,#ffffff_32%,#f8fafc_100%)]'>
+            <div ref={viewportRef} className='space-y-4 p-3.5'>
+              <div className='rounded-[1.2rem] border border-cyan-100 bg-white/90 p-3 shadow-[0_10px_24px_rgba(14,165,233,0.06)] backdrop-blur'>
+                <div className='mb-2.5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-sky-700'>
                   <Zap className='size-3.5' />
                   Quick Start
                 </div>
@@ -253,7 +257,7 @@ export default function AiChatWidget() {
                       type='button'
                       onClick={() => handleQuickPrompt(prompt)}
                       disabled={isLoading}
-                      className='rounded-full border border-sky-200 bg-sky-50 px-3 py-2 text-left text-xs font-medium text-sky-900 transition hover:border-sky-300 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60'
+                      className='rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-left text-[11px] font-medium text-sky-900 transition hover:border-sky-300 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60'
                     >
                       {prompt}
                     </button>
@@ -270,17 +274,23 @@ export default function AiChatWidget() {
                   )}
                 >
                   {message.role === 'assistant' && (
-                    <div className='mt-1 hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(145deg,#0f172a_0%,#0f4c81_100%)] text-white shadow-[0_10px_24px_rgba(15,23,42,0.25)] sm:flex'>
-                      <Bot className='size-4' />
+                    <div className='mt-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(145deg,#0f172a_0%,#0f4c81_100%)] shadow-[0_10px_24px_rgba(15,23,42,0.18)] sm:flex'>
+                      <Image
+                        src='/icons/azclogo.svg'
+                        alt='AZC logo'
+                        width={18}
+                        height={18}
+                        className='h-[18px] w-[18px] object-contain'
+                      />
                     </div>
                   )}
 
                   <div
                     className={cn(
-                      'max-w-[90%] rounded-[1.4rem] px-4 py-3.5 text-sm shadow-sm',
+                      'max-w-[88%] overflow-hidden rounded-[1.25rem] px-4 py-3 text-sm shadow-sm',
                       message.role === 'user'
-                        ? 'bg-[linear-gradient(145deg,#0f172a_0%,#2563eb_100%)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)]'
-                        : 'border border-slate-200/80 bg-white/90 text-slate-800 shadow-[0_12px_28px_rgba(15,23,42,0.06)] backdrop-blur'
+                        ? 'bg-[linear-gradient(145deg,#0f172a_0%,#2563eb_100%)] text-white shadow-[0_10px_24px_rgba(37,99,235,0.2)]'
+                        : 'border border-slate-200/80 bg-white/95 text-slate-800 shadow-[0_8px_22px_rgba(15,23,42,0.05)] backdrop-blur'
                     )}
                   >
                     <div className='mb-2 flex items-center gap-2'>
@@ -293,17 +303,19 @@ export default function AiChatWidget() {
                         {message.role === 'user' ? 'You' : 'Assistant'}
                       </div>
                     </div>
-                    <p className='whitespace-pre-wrap leading-6'>{message.content}</p>
+                    <p className='whitespace-pre-wrap break-words [overflow-wrap:anywhere] leading-6'>
+                      {message.content}
+                    </p>
                   </div>
                 </div>
               ))}
 
               {isLoading && (
                 <div className='flex justify-start gap-3'>
-                  <div className='mt-1 hidden h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(145deg,#0f172a_0%,#0f4c81_100%)] text-white shadow-[0_10px_24px_rgba(15,23,42,0.25)] sm:flex'>
+                  <div className='mt-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[linear-gradient(145deg,#0f172a_0%,#0f4c81_100%)] text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] sm:flex'>
                     <Sparkles className='size-4' />
                   </div>
-                  <div className='flex items-center gap-2 rounded-[1.35rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.06)]'>
+                  <div className='flex items-center gap-2 rounded-[1.2rem] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-[0_8px_22px_rgba(15,23,42,0.05)]'>
                     <LoaderCircle className='size-4 animate-spin text-sky-600' />
                     Finding the best answer...
                   </div>
@@ -320,7 +332,7 @@ export default function AiChatWidget() {
                     <Link
                       key={product.id}
                       href={`/${locale}/product/${product.slug}`}
-                      className='group block rounded-[1.4rem] border border-slate-200/80 bg-white/90 p-4 shadow-[0_14px_34px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_18px_42px_rgba(14,165,233,0.15)]'
+                      className='group block rounded-[1.2rem] border border-slate-200/80 bg-white/95 p-4 shadow-[0_10px_26px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-[0_16px_36px_rgba(14,165,233,0.12)]'
                       onClick={() => setIsOpen(false)}
                     >
                       <div className='flex items-start justify-between gap-3'>
@@ -365,20 +377,20 @@ export default function AiChatWidget() {
             </div>
           </ScrollArea>
 
-          <div className='border-t border-slate-200/80 bg-white/95 p-4 backdrop-blur'>
+          <div className='border-t border-slate-200/80 bg-white/95 p-3.5 backdrop-blur'>
             {error && (
               <div className='mb-3 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700 shadow-sm'>
                 {error}
               </div>
             )}
 
-            <div className='rounded-[1.5rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-3 shadow-[0_12px_24px_rgba(15,23,42,0.05)]'>
+            <div className='rounded-[1.25rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-3 shadow-[0_10px_20px_rgba(15,23,42,0.04)]'>
               <Textarea
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder='Ask about price, stock, best options, or compare products...'
-                className='min-h-24 resize-none rounded-[1.1rem] border-0 bg-transparent px-2 py-2 text-sm shadow-none focus-visible:ring-0'
+                className='min-h-14 resize-none rounded-[1rem] border-0 bg-transparent px-2 py-1.5 text-sm leading-6 shadow-none focus-visible:ring-0'
               />
               <div className='mt-2 flex items-center justify-between gap-3'>
                 <p className='text-xs text-slate-500'>
