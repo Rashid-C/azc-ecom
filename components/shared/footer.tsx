@@ -149,7 +149,7 @@ export default function Footer() {
         </div>
 
         {/* Developer credit */}
-        <div className='mt-3 pt-3 border-t border-gray-800 flex flex-col items-center gap-1.5'>
+        {/* <div className='mt-3 pt-3 border-t border-gray-800 flex flex-col items-center gap-1.5'>
           <p className='text-xs text-gray-500'>
             Designed &amp; Developed by{' '}
             <span className='text-gray-300 font-medium'>Rashid C</span>
@@ -197,7 +197,7 @@ export default function Footer() {
               <Phone className='h-4 w-4' />
             </Link>
           </div>
-        </div>
+        </div> */}
       </div>
     </footer>
   )
