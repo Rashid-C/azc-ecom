@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-const WHATSAPP_NUMBER = '971556936110'
+const WHATSAPP_NUMBER = '971589362677'
 const WHATSAPP_MESSAGE = 'Hello! I am interested in your products.'
 
 interface WhatsAppButtonProps {
